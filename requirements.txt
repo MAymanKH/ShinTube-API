@@ -1,0 +1,3 @@
+fastapi
+yt-dlp
+pydantic-settings
