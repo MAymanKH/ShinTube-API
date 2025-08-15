@@ -5,7 +5,7 @@ This is a **FastAPI backend** that uses [`yt-dlp`](https://github.com/yt-dlp/yt-
 ---
 
 ## 🚀 Features
-- **Search YouTube videos** (`/search`)
+- **Search YouTube videos** (`/search`) with pagination and caching
 - **Get video details & formats** (`/video/{id}`)
 - **Fetch playlist metadata** (`/playlist/{id}`)
 - **Download videos** in selected format (`/download/{id}`)
@@ -13,6 +13,7 @@ This is a **FastAPI backend** that uses [`yt-dlp`](https://github.com/yt-dlp/yt-
 - **Clean modular structure** for scalability
 - **Fast search results** with approximate upload dates
 - **Multiple thumbnail resolutions**
+- **In-memory caching** for efficient pagination (configurable expiry)
 
 ---
 
@@ -89,7 +90,7 @@ The API will be available at:
 | Method | Endpoint | Description | Params |
 |--------|----------|-------------|--------|
 | GET | `/` | Health check | - |
-| GET | `/search` | Search YouTube videos | `q` (string), `limit` (int, 1-50) |
+| GET | `/search` | Search YouTube videos with pagination | `q` (string), `page` (int, default 1), `limit` (int, default 20) |
 | GET | `/video/{video_id}` | Get video details & formats | - |
 | GET | `/playlist/{playlist_id}` | Get playlist metadata & items | - |
 | GET | `/download/{video_id}` | Download a video in selected format | `format` (string, optional) |
@@ -98,7 +99,7 @@ The API will be available at:
 
 **Search videos:**
 ```
-GET /search?q=hello world
+GET /search?q=hello world&page=1&limit=10
 ```
 
 **Get video info:**
@@ -149,7 +150,9 @@ ALLOWED_ORIGINS=["http://localhost:3000", "https://yourdomain.com"]
 ```json
 {
   "query": "hello world",
-  "limit": 15,
+  "page": 1,
+  "limit": 10,
+  "has_more": true,
   "results": [
     {
       "video_id": "u7JMhVI7taQ",
