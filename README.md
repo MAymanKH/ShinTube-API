@@ -125,6 +125,8 @@ Create a `.env` file in the root directory:
 | Variable | Default Value | Description |
 |----------|---------------|-------------|
 | `API_NAME` | `"YouTube API Backend"` | Name of the API |
+| `HOST` | `"0.0.0.0"` | Host of the API |
+| `PORT` | `8000` | Port of the API |
 | `DEBUG` | `True` | Enable debug mode |
 | `CACHE_EXPIRY_SECONDS` | `3600` | Cache lifetime in seconds |
 | `ALLOWED_ORIGINS` | `["*"]` | Allowed CORS origins |
@@ -132,6 +134,8 @@ Create a `.env` file in the root directory:
 Example `.env` file:
 ```env
 API_NAME=ShinTube API
+HOST="0.0.0.0"
+PORT=8000
 DEBUG=False
 CACHE_EXPIRY_SECONDS=7200
 ALLOWED_ORIGINS=["http://localhost:3000", "https://yourdomain.com"]
