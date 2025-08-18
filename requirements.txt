@@ -1,5 +1,4 @@
 fastapi
 uvicorn
-mangum
 yt-dlp
 pydantic-settings
