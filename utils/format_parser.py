@@ -43,23 +43,7 @@ async def format_date(date_str):
         return date_str
 
 
-def format_view_count(view_count: int) -> str:
-    """Format view count into human-readable string"""
-    if view_count is None:
-        return "Unknown views"
-    
-    if view_count >= 1_000_000_000:
-        return f"{view_count / 1_000_000_000:.1f}B views"
-    elif view_count >= 1_000_000:
-        return f"{view_count / 1_000_000:.1f}M views"
-    elif view_count >= 1_000:
-        return f"{view_count / 1_000:.1f}K views"
-    else:
-        return f"{view_count} views"
-
-
-def format_relative_time(upload_date: str, release_year: int = None) -> str:
-    """Format upload date into relative time string"""
+async def format_relative_time(upload_date: str, release_year: int = None) -> str:
     if not upload_date and release_year:
         try:
             current_year = datetime.now().year
@@ -72,18 +56,14 @@ def format_relative_time(upload_date: str, release_year: int = None) -> str:
                 return f"{year_diff} years ago"
         except:
             return "Unknown"
-
     if not upload_date:
         return "Unknown"
-    
     try:
-        # Parse YYYYMMDD format
         upload_dt = datetime.strptime(upload_date, "%Y%m%d")
         now = datetime.now()
         diff = now - upload_dt
-        
         days = diff.days
-        if days < 0: return "In the future" # Should not happen
+        if days < 0: return "In the future"
         if days == 0:
             return "Today"
         elif days == 1:
@@ -103,68 +83,41 @@ def format_relative_time(upload_date: str, release_year: int = None) -> str:
         return "Unknown"
 
 
-def format_video_info(raw_data: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Format yt-dlp raw JSON output into a clean structure
-    
-    Args:
-        raw_data: Raw JSON data from yt-dlp
-        
-    Returns:
-        Cleaned and formatted video information dictionary
-    """
-    # Extract thumbnails
-    thumbnails = []
-    if raw_data.get('thumbnails'):
-        for thumb in raw_data['thumbnails']:
-            if thumb.get('url'):
-                thumbnails.append({
-                    'url': thumb['url'],
-                    'width': thumb.get('width'),
-                    'height': thumb.get('height'),
-                    'id': thumb.get('id')
-                })
-    
-    # Extract formats
-    formats = []
-    if raw_data.get('formats'):
-        for fmt in raw_data['formats']:
-            formats.append({
-                'id': fmt.get('format_id'),
-                'resolution': fmt.get('resolution') or f"{fmt.get('width', 'unknown')}x{fmt.get('height', 'unknown')}",
-                'ext': fmt.get('ext'),
-                'filesize': fmt.get('filesize'),
-                'vcodec': fmt.get('vcodec'),
-                'acodec': fmt.get('acodec'),
-                'fps': fmt.get('fps'),
-                'tbr': fmt.get('tbr')
-            })
-    
+async def format_video_info(raw_data: Dict[str, Any]) -> Dict[str, Any]:
+    # Select one high quality thumbnail url
+    thumbnail_url = None
+    if raw_data.get("thumbnails"):
+        sorted_thumbs = sorted(raw_data["thumbnails"], key=lambda t: t.get("width", 0), reverse=True)
+        thumbnail_url = sorted_thumbs[0].get("url") if sorted_thumbs else None
+
     return {
-        'video_id': raw_data.get('id'),
-        'title': raw_data.get('title'),
-        'description': raw_data.get('description'),
-        'uploader': raw_data.get('uploader') or raw_data.get('channel'),
-        'duration': raw_data.get('duration'),
-        'view_count': raw_data.get('view_count'),
-        'upload_date': raw_data.get('upload_date'),
-        'thumbnails': thumbnails,
-        'formats': formats,
-        'webpage_url': raw_data.get('webpage_url'),
-        'original_url': raw_data.get('original_url')
+        "id": raw_data.get("id"),
+        "title": raw_data.get("title"),
+        "description": raw_data.get("description"),
+        "channel": raw_data.get("channel"),
+        "channel_id": raw_data.get("channel_id"),
+        "channel_url": raw_data.get("channel_url"),
+        "channel_follower_count": raw_data.get("channel_follower_count"),
+        "channel_follower_count_string": await format_number(raw_data.get("channel_follower_count")),
+        "channel_follower_count_compact_string": await format_compact_number(raw_data.get("channel_follower_count")),
+        "uploader": raw_data.get("uploader"),
+        "uploader_id": raw_data.get("uploader_id"),
+        "duration": raw_data.get("duration"),
+        "duration_string": await format_duration(raw_data.get("duration")),
+        "view_count": raw_data.get("view_count"),
+        "view_count_string": await format_number(raw_data.get("view_count")),
+        "view_count_compact_string": await format_compact_number(raw_data.get("view_count")),
+        "like_count": raw_data.get("like_count"),
+        "like_count_string": await format_number(raw_data.get("like_count")),
+        "like_count_compact_string": await format_compact_number(raw_data.get("like_count")),
+        "publish_date": raw_data.get("upload_date"),
+        "publish_date_string": await format_date(raw_data.get("upload_date")),
+        "thumbnail_url": thumbnail_url,
+        "webpage_url": raw_data.get("webpage_url"),
     }
 
 
-def format_playlist_info(raw_data: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Format yt-dlp raw playlist JSON output into a clean structure
-    
-    Args:
-        raw_data: Raw JSON data from yt-dlp for playlist
-        
-    Returns:
-        Cleaned and formatted playlist information dictionary
-    """
+async def format_playlist_info(raw_data: Dict[str, Any]) -> Dict[str, Any]:
     entries = []
     if raw_data.get('entries'):
         for entry in raw_data['entries']:
@@ -176,7 +129,6 @@ def format_playlist_info(raw_data: Dict[str, Any]) -> Dict[str, Any]:
                     'duration': entry.get('duration'),
                     'url': entry.get('url') or entry.get('webpage_url')
                 })
-    
     return {
         'playlist_id': raw_data.get('id'),
         'title': raw_data.get('title'),
@@ -188,29 +140,15 @@ def format_playlist_info(raw_data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def format_search_results(raw_results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """
-    Format yt-dlp search results into a clean structure
-    
-    Args:
-        raw_results: List of raw JSON search results from yt-dlp
-        
-    Returns:
-        List of cleaned and formatted video information dictionaries
-    """
+async def   format_search_results(raw_results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     formatted_results = []
     for result in raw_results:
-        # Use upload_date directly from yt-dlp output
         upload_date = result.get('upload_date')
-        
         view_count = result.get('view_count')
         duration = result.get('duration')
-        
-        # Generate thumbnail URLs from video ID - only two resolutions
         video_id = result.get('id')
         thumbnails = []
         if video_id:
-            # YouTube thumbnail URL patterns - only medium and high quality
             thumbnails = [
                 {
                     'url': f"https://img.youtube.com/vi/{video_id}/mqdefault.jpg",
@@ -225,8 +163,6 @@ def format_search_results(raw_results: List[Dict[str, Any]]) -> List[Dict[str, A
                     'resolution': '480x360'
                 }
             ]
-        
-        # Use existing thumbnails if available, otherwise use generated ones
         if result.get('thumbnails'):
             existing_thumbnails = []
             for thumb in result['thumbnails']:
@@ -239,22 +175,19 @@ def format_search_results(raw_results: List[Dict[str, Any]]) -> List[Dict[str, A
                         'height': height,
                         'resolution': f"{width}x{height}" if width and height else "unknown"
                     })
-            # Limit to only 2 thumbnails
             if existing_thumbnails:
                 thumbnails = existing_thumbnails[:2]
-        
         formatted_results.append({
             'video_id': video_id,
             'title': result.get('title'),
             'uploader': result.get('uploader') or result.get('channel') or result.get('channel_id'),
             'duration': duration,
-            'duration_string': format_duration(duration),
+            'duration_string': await format_duration(duration),
             'view_count': view_count,
-            'view_count_string': format_view_count(view_count) if view_count else "Unknown views",
+            'view_count_string': await format_compact_number(view_count) if view_count else "Unknown views",
             'upload_date': upload_date,
-            'upload_date_string': format_relative_time(upload_date) if upload_date else "Unknown",
+            'upload_date_string': await format_relative_time(upload_date) if upload_date else "Unknown",
             'thumbnails': thumbnails,
             'url': result.get('url') or f"https://youtube.com/watch?v={video_id}" if video_id else None
         })
-    
     return formatted_results

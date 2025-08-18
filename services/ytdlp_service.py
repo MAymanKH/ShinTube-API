@@ -82,7 +82,7 @@ async def search_videos(query: str, limit: int = 15) -> List[Dict[str, Any]]:
                 except json.JSONDecodeError:
                     continue
         
-        return format_search_results(videos)
+        return await format_search_results(videos)
     except Exception as e:
         raise Exception(f"Search failed: {str(e)}")
 
