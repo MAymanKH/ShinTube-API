@@ -1,7 +1,7 @@
-from typing import Optional
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Query, HTTPException
 from services import ytdlp_service
 from utils.format_parser import format_video_info
+from typing import Optional
 import sys
 import os
 
@@ -9,7 +9,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 router = APIRouter()
 
-@router.get("/video/{video_id}")
+@router.get("/{video_id}")
 async def video(video_id: str):
     if not video_id:
         raise HTTPException(status_code=422, detail="Query parameter 'video_id' is required")
@@ -19,7 +19,7 @@ async def video(video_id: str):
         if not info or 'title' not in info:
             raise HTTPException(status_code=404, detail="Video not found")
         result = await format_video_info(info)
-        return result
+        return {"video_id": video_id, "result": result}
     except HTTPException:
         raise
     except Exception as e:
