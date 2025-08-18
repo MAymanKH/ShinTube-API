@@ -39,7 +39,7 @@ async def run_ytdlp(args: List[str]) -> Dict[str, Any]:
         raise Exception(f"Failed to execute yt-dlp: {str(e)}")
 
 
-async def search_videos(query: str, limit: int = 30) -> List[Dict[str, Any]]:
+async def search_videos(query: str, limit: int = 15) -> List[Dict[str, Any]]:
     """
     Search for videos using yt-dlp
     

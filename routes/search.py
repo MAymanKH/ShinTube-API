@@ -12,7 +12,7 @@ router = APIRouter()
 @router.get("/")
 async def search(
     q: Optional[str] = Query(None, description="Search query"),
-    limit: int = Query(30, ge=1, le=50, description="Number of results to return"),
+    limit: int = Query(15, ge=1, le=50, description="Number of results to return"),
 ):
     if not q:
         raise HTTPException(status_code=422, detail="Query parameter 'q' is required")
