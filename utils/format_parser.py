@@ -2,6 +2,47 @@ from typing import Dict, List, Any
 from datetime import datetime
 
 
+async def format_duration(seconds):
+    if not seconds:
+        return None
+    m, s = divmod(int(seconds), 60)
+    h, m = divmod(m, 60)
+    if h:
+        return f"{h}:{m:02}:{s:02}"
+    else:
+        return f"{m}:{s:02}"
+
+
+async def format_number(n):
+    if n is None:
+        return None
+    return f"{n:,}"
+
+
+async def format_compact_number(n):
+    if n is None:
+        return None
+    n = int(n)
+    if n >= 1_000_000_000:
+        return f"{n/1_000_000_000:.1f}B"
+    elif n >= 1_000_000:
+        return f"{n/1_000_000:.1f}M"
+    elif n >= 1_000:
+        return f"{n/1_000:.1f}K"
+    else:
+        return str(n)
+
+
+async def format_date(date_str):
+    if not date_str:
+        return None
+    try:
+        dt = datetime.strptime(date_str, "%Y%m%d")
+        return dt.strftime("%b %d, %Y")
+    except Exception:
+        return date_str
+
+
 def format_view_count(view_count: int) -> str:
     """Format view count into human-readable string"""
     if view_count is None:
@@ -60,27 +101,6 @@ def format_relative_time(upload_date: str, release_year: int = None) -> str:
             return f"{years} year{'s' if years > 1 else ''} ago"
     except:
         return "Unknown"
-
-
-def format_duration(duration) -> str:
-    """Format duration in seconds to human-readable string"""
-    if duration is None:
-        return "Unknown"
-    
-    # Convert to int if it's a float
-    try:
-        duration = int(duration)
-    except (ValueError, TypeError):
-        return "Unknown"
-    
-    hours = duration // 3600
-    minutes = (duration % 3600) // 60
-    seconds = duration % 60
-    
-    if hours > 0:
-        return f"{hours}:{minutes:02d}:{seconds:02d}"
-    else:
-        return f"{minutes}:{seconds:02d}"
 
 
 def format_video_info(raw_data: Dict[str, Any]) -> Dict[str, Any]:

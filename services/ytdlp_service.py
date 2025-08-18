@@ -28,13 +28,14 @@ async def run_ytdlp(args: List[str]) -> Dict[str, Any]:
         )
         stdout, stderr = await result.communicate()
         
-        if result.returncode != 0:
-            raise Exception(f"yt-dlp failed: {stderr.decode()}")
-        
-        return json.loads(stdout.decode())
-    except json.JSONDecodeError:
-        # Handle non-JSON output
-        return {"output": stdout.decode() if stdout else ""}
+        # Try to parse JSON even if returncode != 0 (yt-dlp may still output metadata)
+        try:
+            return json.loads(stdout.decode())
+        except json.JSONDecodeError:
+            # Handle non-JSON output
+            if result.returncode != 0:
+                raise Exception(f"yt-dlp failed: {stderr.decode()}")
+            return {"output": stdout.decode() if stdout else ""}
     except Exception as e:
         raise Exception(f"Failed to execute yt-dlp: {str(e)}")
 
@@ -99,7 +100,10 @@ async def get_video_info(video_id: str) -> Dict[str, Any]:
     args = [
         f"https://youtube.com/watch?v={video_id}",
         "--dump-json",
-        "--no-download"
+        "--no-download",
+        "--skip-download",
+        "--no-playlist",
+        "--ignore-errors"    # Continue even if some formats fail
     ]
     
     return await run_ytdlp(args)
