@@ -11,8 +11,8 @@ router = APIRouter()
 @router.get("/{video_id}")
 async def video(video_id: str):
     try:
-        result = await get_video_info(video_id)
-        return {"video_id": video_id, "result": result}
+        video_info = await get_video_info(video_id)
+        return video_info
     except exceptions.VideoNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except exceptions.YTDLPError as e:

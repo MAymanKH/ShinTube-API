@@ -72,14 +72,16 @@ def format_relative_time(upload_date: str) -> str:
 
 
 async def format_video_info(raw_data: Dict[str, Any]) -> Dict[str, Any]:
-    thumbnail_url = None
-    if raw_data.get("thumbnails"):
-        sorted_thumbs = sorted(raw_data["thumbnails"], key=lambda t: t.get("width", 0), reverse=True)
-        if sorted_thumbs:
-            thumbnail_url = sorted_thumbs[0].get("url")
+    video_id = raw_data.get("id")
+    thumbnails = [
+                {'url': f"https://img.youtube.com/vi/{video_id}/mqdefault.jpg", 'width': 320, 'height': 180, 'resolution': "320x180"},
+                {'url': f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg", 'width': 480, 'height': 360, 'resolution': "480x360"},
+                {'url': f"https://img.youtube.com/vi/{video_id}/maxresdefault.jpg", 'width': 1280, 'height': 720, 'resolution': "1280x720"}
+            ]
 
     return {
-        "id": raw_data.get("id"),
+        "video_id": video_id,
+        "url": raw_data.get("webpage_url"),
         "title": raw_data.get("title"),
         "description": raw_data.get("description"),
         "channel": raw_data.get("channel"),
@@ -100,24 +102,21 @@ async def format_video_info(raw_data: Dict[str, Any]) -> Dict[str, Any]:
         "publish_date": raw_data.get("upload_date"),
         "publish_date_string": format_date(raw_data.get("upload_date")),
         "relative_publish_date": format_relative_time(raw_data.get("upload_date")),
-        "thumbnail_url": thumbnail_url,
-        "webpage_url": raw_data.get("webpage_url"),
+        "thumbnails": thumbnails,
     }
 
 async def format_search_results(raw_results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     formatted_results = []
     for result in raw_results:
         video_id = result.get('id')
-        thumbnails = []
-        if video_id:
-            # Provide default thumbnails as a fallback
-            thumbnails = [
-                {'url': f"https://img.youtube.com/vi/{video_id}/mqdefault.jpg", 'width': 320, 'height': 180},
-                {'url': f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg", 'width': 480, 'height': 360}
-            ]
-        
+        thumbnails = [
+            {'url': f"https://img.youtube.com/vi/{video_id}/mqdefault.jpg", 'width': 320, 'height': 180, 'resolution': "320x180"},
+            {'url': f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg", 'width': 480, 'height': 360, 'resolution': "480x360"},
+        ]
+
         formatted_results.append({
             'video_id': video_id,
+            'url': result.get('url'),
             'title': result.get('title'),
             'uploader': result.get('uploader') or result.get('channel'),
             'duration': result.get('duration'),
@@ -127,19 +126,21 @@ async def format_search_results(raw_results: List[Dict[str, Any]]) -> List[Dict[
             'upload_date': result.get('upload_date'),
             'upload_date_string': format_relative_time(result.get('upload_date')),
             'thumbnails': thumbnails,
-            'url': result.get('url') or (f"https://youtube.com/watch?v={video_id}" if video_id else None)
         })
     return formatted_results
 
 async def format_playlist_info(playlist_data: Dict[str, Any], video_entries: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Formats the playlist metadata and its list of videos."""
+    channel_id = playlist_data.get('channel_id')
+    if channel_id.startswith('@'): channel_url = f"https://www.youtube.com/{playlist_data.get('channel_id')}"
+    else: channel_url = f"https://www.youtube.com/channel/{playlist_data.get('channel_id')}"
     return {
         'playlist_id': playlist_data.get('id'),
         'title': playlist_data.get('title'),
         'description': playlist_data.get('description'),
         'uploader': playlist_data.get('uploader') or playlist_data.get('channel'),
-        'channel_id': playlist_data.get('channel_id'),
-        'channel_url': playlist_data.get('channel_url'),
+        'channel_id': channel_id,
+        'channel_url': channel_url,
         'item_count': playlist_data.get('playlist_count') or len(video_entries),
         'videos': await format_search_results(video_entries), # Reuse the search formatter
         'webpage_url': playlist_data.get('webpage_url')
