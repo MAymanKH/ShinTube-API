@@ -13,3 +13,7 @@ class PlaylistNotFoundError(YTDLPError):
 class DownloadError(YTDLPError):
     """Raised when a video download fails."""
     pass
+
+class DataParsingError(Exception):
+    """Raised when formatting or parsing of successfully fetched data fails."""
+    pass
