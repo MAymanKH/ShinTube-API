@@ -6,10 +6,10 @@ import json
 import sys
 from typing import List, Dict, Any
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils.format_parser import format_search_results
+from utils.format_parser import format_search_results, format_video_info
 
 
-async def run_ytdlp(args: List[str]) -> Dict[str, Any]:
+async def run_ytdlp(args: List[str], type: str) -> Dict[str, Any]:
     """
     Execute yt-dlp command and return JSON output
     
@@ -30,7 +30,17 @@ async def run_ytdlp(args: List[str]) -> Dict[str, Any]:
         
         # Try to parse JSON even if returncode != 0 (yt-dlp may still output metadata)
         try:
-            return json.loads(stdout.decode())
+            if type == "search":
+                info = []
+                for line in stdout.decode().strip().split('\n'):
+                    if line:
+                        try:
+                            info.append(json.loads(line))
+                        except json.JSONDecodeError:
+                            continue
+                return info
+            elif type == "video":
+                return json.loads(stdout.decode())
         except json.JSONDecodeError:
             # Handle non-JSON output
             if result.returncode != 0:
@@ -61,30 +71,8 @@ async def search_videos(query: str, limit: int = 15) -> List[Dict[str, Any]]:
         "--extractor-args", "youtubetab:approximate_date"
     ]
     
-    try:
-        cmd = ["yt-dlp"] + args
-        result = await asyncio.create_subprocess_exec(
-            *cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
-        stdout, stderr = await result.communicate()
-        
-        if result.returncode != 0:
-            raise Exception(f"Search failed: {stderr.decode()}")
-        
-        # Parse multiple JSON objects
-        videos = []
-        for line in stdout.decode().strip().split('\n'):
-            if line:
-                try:
-                    videos.append(json.loads(line))
-                except json.JSONDecodeError:
-                    continue
-        
-        return await format_search_results(videos)
-    except Exception as e:
-        raise Exception(f"Search failed: {str(e)}")
+    videos = await run_ytdlp(args, "search")
+    return await format_search_results(videos)
 
 
 async def get_video_info(video_id: str) -> Dict[str, Any]:
@@ -103,10 +91,11 @@ async def get_video_info(video_id: str) -> Dict[str, Any]:
         "--no-download",
         "--skip-download",
         "--no-playlist",
-        "--ignore-errors"    # Continue even if some formats fail
+        "--ignore-errors"
     ]
-    
-    return await run_ytdlp(args)
+    info = await run_ytdlp(args, "video")
+    return await format_video_info(info)
+
 
 
 async def get_playlist_info(playlist_id: str) -> Dict[str, Any]:
@@ -206,10 +195,5 @@ async def download_video(video_id: str, format_id: str = None) -> Dict[str, Any]
                     "format_id": format_id
                 }
         
-        raise Exception("Downloaded file not found")
-    except Exception as e:
-        raise Exception(f"Download failed: {str(e)}")
-    except Exception as e:
-        raise Exception(f"Download failed: {str(e)}")
     except Exception as e:
         raise Exception(f"Download failed: {str(e)}")
