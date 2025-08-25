@@ -152,7 +152,7 @@ async def format_comments(raw_comments: List[Dict[str, Any]], limit: int) -> Dic
     """Formats raw comments, nests replies, sorts by likes, and applies a limit."""
     comment_map = {}
     
-    # First pass: Process and map all comments
+    # Process and map all comments
     for comment in raw_comments:
         comment_id = comment.get('id')
         if not comment_id:
@@ -183,7 +183,7 @@ async def format_comments(raw_comments: List[Dict[str, Any]], limit: int) -> Dic
             "replies": []
         }
         
-    # Second pass: Link replies and build the final list
+    # Link replies and build the final list
     root_comments = []
     for comment_id, comment_data in comment_map.items():
         parent_id = comment_data.pop('parent_id', None)
@@ -195,7 +195,7 @@ async def format_comments(raw_comments: List[Dict[str, Any]], limit: int) -> Dic
         else:
             root_comments.append(comment_data)
 
-    # After nesting, sort the replies within each root comment by likes
+    # Sort the replies within each root comment by likes
     for comment in root_comments:
         if comment['replies']:
             # Sort replies by like_count in descending order
