@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from services import ytdlp_service
+from services.ytdlp_service import get_playlist_info
 from utils import exceptions
 import sys
 import os
@@ -11,7 +11,7 @@ router = APIRouter()
 @router.get("/{playlist_id}")
 async def get_playlist(playlist_id: str):
     try:
-        playlist_info = await ytdlp_service.get_playlist_info(playlist_id)
+        playlist_info = await get_playlist_info(playlist_id)
         return playlist_info
     except exceptions.PlaylistNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))

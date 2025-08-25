@@ -30,8 +30,8 @@ async def health_check():
 
 # Mount routers
 app.include_router(search.router, prefix="/search", tags=["search"])
-app.include_router(video.router, prefix="/video", tags=["video"])
-app.include_router(playlist.router, prefix="/playlist", tags=["playlist"])
+app.include_router(video.router, prefix="/videos", tags=["videos"])
+app.include_router(playlist.router, prefix="/playlists", tags=["playlists"])
 app.include_router(download.router, prefix="/download", tags=["download"])
 
 if __name__ == "__main__":
