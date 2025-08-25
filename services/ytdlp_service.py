@@ -5,7 +5,9 @@ import subprocess
 import json
 import sys
 from typing import List, Dict, Any
-from utils.format_parser import format_search_results, format_video_info, format_playlist_info
+
+from fastapi import HTTPException
+from utils.format_parser import format_comments, format_search_results, format_video_info, format_playlist_info
 from utils import exceptions
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -122,3 +124,31 @@ async def download_video(video_id: str, format_id: str = None) -> Dict[str, Any]
         raise exceptions.DownloadError("Download completed but the file was not found.")
     except exceptions.YTDLPError as e:
         raise exceptions.DownloadError(f"Download failed: {str(e)}")
+
+async def get_video_comments(video_id: str, limit: int = 600, sort_by: str = "top") -> Dict[str, Any]:
+    """Get video comments using yt-dlp."""
+    # CORRECT WAY: Combine all extractor arguments into a single string,
+    # separated by semicolons.
+    extractor_args_string = f"youtube:max_comments={limit};comment_sort={sort_by};comment_mode=all"
+
+    args = [
+        f"https://youtube.com/watch?v={video_id}",
+        "--get-comments",
+        "--extractor-args",     # Use the flag only once
+        extractor_args_string,  # Pass the combined string
+        "--dump-json",
+        "--no-download",
+        "--skip-download",
+    ]
+    try:
+        output = await run_ytdlp_process(args)
+        data = json.loads(output)
+        
+        raw_comments = data.get('comments')
+        if raw_comments is None:
+            # Pass the user's limit to the formatter, as it still applies it after nesting
+            return await format_comments([], limit) 
+            
+        return await format_comments(raw_comments, limit)
+    except json.JSONDecodeError:
+        raise exceptions.DataParsingError(f"Could not parse comment data for video ID: {video_id}.")

@@ -147,3 +147,66 @@ async def format_playlist_info(playlist_data: Dict[str, Any], video_entries: Lis
         'videos': await format_search_results(video_entries), # Reuse the search formatter
         'webpage_url': playlist_data.get('webpage_url')
     }
+
+async def format_comments(raw_comments: List[Dict[str, Any]], limit: int) -> Dict[str, Any]:
+    """Formats raw comments, nests replies, sorts by likes, and applies a limit."""
+    comment_map = {}
+    
+    # First pass: Process and map all comments
+    for comment in raw_comments:
+        comment_id = comment.get('id')
+        if not comment_id:
+            continue
+        
+        author = comment.get('author') or 'Unknown'
+        author_id = comment.get('author_id')
+        author_url = None
+        if author_id and author_id.startswith('UC'):
+            author_url = f"https://www.youtube.com/channel/{author_id}"
+        elif author_id:
+            author_url = f"https://www.youtube.com/{author_id}"
+            
+        comment_map[comment_id] = {
+            "comment_id": comment_id,
+            "text": comment.get('text'),
+            "author": author,
+            "author_id": author_id,
+            "author_url": author_url,
+            "like_count": comment.get('like_count'),
+            "like_count_string": format_compact_number(comment.get('like_count')),
+            "is_hearted": comment.get('is_favorited', False),
+            "is_pinned": comment.get('is_pinned', False),
+            "timestamp": comment.get('timestamp'),
+            "time_text": comment.get('_time_text'),
+            "parent_id": comment.get('parent'),
+            "reply_count": 0,
+            "replies": []
+        }
+        
+    # Second pass: Link replies and build the final list
+    root_comments = []
+    for comment_id, comment_data in comment_map.items():
+        parent_id = comment_data.pop('parent_id', None)
+        
+        if parent_id and parent_id in comment_map:
+            parent_comment = comment_map[parent_id]
+            parent_comment['replies'].append(comment_data)
+            parent_comment['reply_count'] += 1
+        else:
+            root_comments.append(comment_data)
+
+    # After nesting, sort the replies within each root comment by likes
+    for comment in root_comments:
+        if comment['replies']:
+            # Sort replies by like_count in descending order
+            comment['replies'].sort(key=lambda r: r.get('like_count', 0), reverse=True)
+
+    # Sort root comments: pinned first, then by like_count in descending order
+    root_comments.sort(key=lambda c: (c.get('is_pinned', False), c.get('like_count', 0)), reverse=True)
+
+    limited_comments = root_comments[:limit]
+
+    return {
+        "comment_count": len(limited_comments),
+        "comments": limited_comments
+    }
