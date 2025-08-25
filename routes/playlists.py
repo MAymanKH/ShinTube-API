@@ -9,7 +9,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 router = APIRouter()
 
 @router.get("/{playlist_id}")
-async def get_playlist(playlist_id: str):
+async def playlists(playlist_id: str):
     try:
         playlist_info = await get_playlist_info(playlist_id)
         return playlist_info

@@ -9,7 +9,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 router = APIRouter()
 
 @router.get("/{video_id}")
-async def video(video_id: str):
+async def videos(video_id: str):
     try:
         video_info = await get_video_info(video_id)
         return video_info

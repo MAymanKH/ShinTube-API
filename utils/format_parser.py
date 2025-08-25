@@ -70,6 +70,30 @@ def format_relative_time(upload_date: str) -> str:
 
 # ----------------------------------
 
+async def format_search_results(raw_results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    formatted_results = []
+    for result in raw_results:
+        video_id = result.get('id')
+        thumbnails = [
+            {'url': f"https://img.youtube.com/vi/{video_id}/mqdefault.jpg", 'width': 320, 'height': 180, 'resolution': "320x180"},
+            {'url': f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg", 'width': 480, 'height': 360, 'resolution': "480x360"},
+        ]
+
+        formatted_results.append({
+            'video_id': video_id,
+            'url': result.get('url'),
+            'title': result.get('title'),
+            'live_status': result.get('live_status'),
+            'uploader': result.get('uploader') or result.get('channel'),
+            'duration': result.get('duration'),
+            'duration_string': format_duration(result.get('duration')),
+            'view_count': result.get('view_count'),
+            'view_count_string': format_compact_number(result.get('view_count')),
+            'upload_date': result.get('upload_date'),
+            'upload_date_string': format_relative_time(result.get('upload_date')),
+            'thumbnails': thumbnails,
+        })
+    return formatted_results
 
 async def format_video_info(raw_data: Dict[str, Any]) -> Dict[str, Any]:
     video_id = raw_data.get("id")
@@ -104,30 +128,6 @@ async def format_video_info(raw_data: Dict[str, Any]) -> Dict[str, Any]:
         "relative_publish_date": format_relative_time(raw_data.get("upload_date")),
         "thumbnails": thumbnails,
     }
-
-async def format_search_results(raw_results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    formatted_results = []
-    for result in raw_results:
-        video_id = result.get('id')
-        thumbnails = [
-            {'url': f"https://img.youtube.com/vi/{video_id}/mqdefault.jpg", 'width': 320, 'height': 180, 'resolution': "320x180"},
-            {'url': f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg", 'width': 480, 'height': 360, 'resolution': "480x360"},
-        ]
-
-        formatted_results.append({
-            'video_id': video_id,
-            'url': result.get('url'),
-            'title': result.get('title'),
-            'uploader': result.get('uploader') or result.get('channel'),
-            'duration': result.get('duration'),
-            'duration_string': format_duration(result.get('duration')),
-            'view_count': result.get('view_count'),
-            'view_count_string': format_compact_number(result.get('view_count')),
-            'upload_date': result.get('upload_date'),
-            'upload_date_string': format_relative_time(result.get('upload_date')),
-            'thumbnails': thumbnails,
-        })
-    return formatted_results
 
 async def format_playlist_info(playlist_data: Dict[str, Any], video_entries: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Formats the playlist metadata and its list of videos."""
