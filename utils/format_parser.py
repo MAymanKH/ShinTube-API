@@ -132,8 +132,10 @@ async def format_search_results(raw_results: List[Dict[str, Any]]) -> List[Dict[
 async def format_playlist_info(playlist_data: Dict[str, Any], video_entries: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Formats the playlist metadata and its list of videos."""
     channel_id = playlist_data.get('channel_id')
-    if channel_id.startswith('@'): channel_url = f"https://www.youtube.com/{playlist_data.get('channel_id')}"
-    else: channel_url = f"https://www.youtube.com/channel/{playlist_data.get('channel_id')}"
+    channel_url = playlist_data.get('channel_url')
+    if not channel_url and channel_id:
+        if channel_id.startswith('@'): channel_url = f"https://www.youtube.com/{playlist_data.get('channel_id')}"
+        else: channel_url = f"https://www.youtube.com/channel/{playlist_data.get('channel_id')}"
     return {
         'playlist_id': playlist_data.get('id'),
         'title': playlist_data.get('title'),
