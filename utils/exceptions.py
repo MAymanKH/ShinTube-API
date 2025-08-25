@@ -1,22 +1,15 @@
-class VideoNotFoundException(Exception):
-    """Exception raised when a video is not found"""
-    
-    def __init__(self, message: str = "Video not found"):
-        self.message = message
-        super().__init__(self.message)
+class YTDLPError(Exception):
+    """Base exception for errors raised by the ytdlp_service."""
+    pass
 
+class VideoNotFoundError(YTDLPError):
+    """Raised when a video cannot be found or is unavailable."""
+    pass
 
-class PlaylistNotFoundException(Exception):
-    """Exception raised when a playlist is not found"""
-    
-    def __init__(self, message: str = "Playlist not found"):
-        self.message = message
-        super().__init__(self.message)
+class PlaylistNotFoundError(YTDLPError):
+    """Raised when a playlist cannot be found or is unavailable."""
+    pass
 
-
-class DownloadFailedException(Exception):
-    """Exception raised when video download fails"""
-    
-    def __init__(self, message: str = "Download failed"):
-        self.message = message
-        super().__init__(self.message)
+class DownloadError(YTDLPError):
+    """Raised when a video download fails."""
+    pass

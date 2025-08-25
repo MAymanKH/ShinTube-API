@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Query, HTTPException
 from services.ytdlp_service import search_videos
+from utils import exceptions
 import sys
 import os
 
@@ -15,11 +16,12 @@ async def search(
 ):
 
     try:
-        total_results = limit * page
-        videos = await search_videos(q, total_results)
-        start = limit * (page - 1)
-        end = start + limit
-        paged_results = videos[start:end] if start < len(videos) else []
+        total_results_to_fetch = limit * page
+        videos = await search_videos(q, total_results_to_fetch)
+        start_index = limit * (page - 1)
+        paged_results = videos[start_index : start_index + limit]
         return {"query": q, "limit": limit, "page": page, "results": paged_results}
+    except exceptions.YTDLPError as e:
+        raise HTTPException(status_code=500, detail=f"Search service failed: {str(e)}")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
