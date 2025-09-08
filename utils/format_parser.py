@@ -160,10 +160,14 @@ async def format_playlist_info(playlist_data: Dict[str, Any], video_entries: Lis
 
 # Formats `/videos/{video_id}/comments` output
 async def format_comments(raw_comments: List[Dict[str, Any]], limit: int) -> Dict[str, Any]:
-    """Formats raw comments, nests replies, sorts by likes, and applies a limit."""
+    """
+    Formats raw comments, nests replies under their parents, and applies a limit
+    only to the root-level comments.
+    """
     comment_map = {}
-    
-    # Process and map all comments
+    root_comments = []
+
+    # First, process all comments into a structured map.
     for comment in raw_comments:
         comment_id = comment.get('id')
         if not comment_id:
@@ -193,9 +197,8 @@ async def format_comments(raw_comments: List[Dict[str, Any]], limit: int) -> Dic
             "reply_count": 0,
             "replies": []
         }
-        
-    # Link replies and build the final list
-    root_comments = []
+
+    # Separate root comments from replies and nest replies under their parents.
     for comment_id, comment_data in comment_map.items():
         parent_id = comment_data.pop('parent_id', None)
         
@@ -206,20 +209,20 @@ async def format_comments(raw_comments: List[Dict[str, Any]], limit: int) -> Dic
         else:
             root_comments.append(comment_data)
 
-    # Sort the replies within each root comment by likes
+    # Sort replies within each root comment by likes (most liked first).
     for comment in root_comments:
         if comment['replies']:
-            # Sort replies by like_count in descending order
             comment['replies'].sort(key=lambda r: r.get('like_count', 0), reverse=True)
 
-    # Sort root comments: pinned first, then by like_count in descending order
+    # Sort root comments: pinned comments first, then by likes (most liked first).
     root_comments.sort(key=lambda c: (c.get('is_pinned', False), c.get('like_count', 0)), reverse=True)
 
-    limited_comments = root_comments[:limit]
+    # Apply the limit to the list of root comments.
+    limited_root_comments = root_comments[:limit]
 
     return {
-        "comment_count": len(limited_comments),
-        "comments": limited_comments
+        "comment_count": len(limited_root_comments),
+        "comments": limited_root_comments
     }
 
 # Formats `/videos/{video_id}/subtitles` output

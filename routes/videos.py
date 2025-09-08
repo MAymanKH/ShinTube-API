@@ -27,7 +27,7 @@ async def videos(video_id: str):
 async def video_comments(video_id: str):
     try:
         logger.info(f"Fetching comments for video_id: {video_id}")
-        result = await get_video_comments(video_id)
+        result = await get_video_comments(video_id, 50, 500)
         logger.info(f"Successfully fetched comments for video_id: {video_id}")
         return {"video_id": video_id, "result": result}
     except exceptions.VideoNotFoundError as e:

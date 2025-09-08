@@ -110,9 +110,9 @@ async def get_playlist_info(playlist_id: str) -> Dict[str, Any]:
     return await format_playlist_info(playlist_metadata, video_entries)
 
 # Called by `/videos/{video_id}/comments`
-async def get_video_comments(video_id: str, limit: int = 600, sort_by: str = "top") -> Dict[str, Any]:
+async def get_video_comments(video_id: str, comments_limit: int, comments_replies_limit: int, sort_by: str = "top") -> Dict[str, Any]:
     """Get video comments using yt-dlp."""
-    extractor_args_string = f"youtube:max_comments={limit};comment_sort={sort_by};comment_mode=all"
+    extractor_args_string = f"youtube:max_comments={comments_replies_limit};comment_sort={sort_by};comment_mode=all"
     args = [
         f"https://youtube.com/watch?v={video_id}",
         "--get-comments",
@@ -128,8 +128,8 @@ async def get_video_comments(video_id: str, limit: int = 600, sort_by: str = "to
         data = json.loads(output)
         raw_comments = data.get('comments')
         if raw_comments is None:
-            return await format_comments([], limit) 
-        return await format_comments(raw_comments, limit)
+            return await format_comments([], comments_limit) 
+        return await format_comments(raw_comments, comments_limit)
     except json.JSONDecodeError:
         raise exceptions.DataParsingError(f"Could not parse comment data for video ID: {video_id}.")
 
