@@ -22,6 +22,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Logging
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     start_time = time.time()
