@@ -1,36 +1,35 @@
-import logging
 import sys
 import os
-from logging.handlers import TimedRotatingFileHandler
+from loguru import logger
 from config import settings
 
-LOG_FORMAT = "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
-LOG_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
+LOG_FORMAT = "<green>{time:YYYY-MM-DD HH:mm:ss}</green> - <level>{level: <8}</level> - <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
 
 if not os.path.exists("logs"):
     os.makedirs("logs")
 
-def get_logger(name: str) -> logging.Logger:
-    """
-    Configures and returns a logger.
-    """
-    logger = logging.getLogger(name)
-    
-    if logger.hasHandlers():
-        return logger
+# Remove default handler
+logger.remove()
 
-    logger.setLevel(logging.DEBUG if settings.DEBUG else logging.INFO)
+# Console logger
+logger.add(
+    sys.stdout,
+    colorize=True,
+    format=LOG_FORMAT,
+    level="DEBUG" if settings.DEBUG else "INFO",
+)
 
-    formatter = logging.Formatter(LOG_FORMAT, datefmt=LOG_DATE_FORMAT)
+# File logger
+logger.add(
+    "logs/app.log",
+    rotation="00:00",
+    retention="7 days",
+    encoding="utf-8",
+    level="INFO",
+    format=LOG_FORMAT,
+    enqueue=True,  # Make logging asynchronous
+    backtrace=True,
+    diagnose=settings.DEBUG,
+)
 
-    # Console handler
-    stream_handler = logging.StreamHandler(sys.stdout)
-    stream_handler.setFormatter(formatter)
-    logger.addHandler(stream_handler)
-
-    # File handler
-    file_handler = TimedRotatingFileHandler("logs/app.log", when="midnight", interval=1, backupCount=7, encoding='utf-8')
-    file_handler.setFormatter(formatter)
-    logger.addHandler(file_handler)
-
-    return logger
+__all__ = ["logger"]

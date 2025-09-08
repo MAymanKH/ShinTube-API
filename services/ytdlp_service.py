@@ -7,10 +7,9 @@ import sys
 from typing import List, Dict, Any
 from utils.format_parser import format_comments, format_search_results, format_video_info, format_playlist_info, format_subtitles
 from utils import exceptions
-from utils.logger import get_logger
+from utils.logger import logger
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-logger = get_logger(__name__)
 
 # Used to run al yt-dlp processes
 async def run_ytdlp_process(args: List[str]):

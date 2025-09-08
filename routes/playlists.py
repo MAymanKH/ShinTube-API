@@ -1,14 +1,13 @@
 from fastapi import APIRouter, HTTPException
 from services.ytdlp_service import get_playlist_info
 from utils import exceptions
-from utils.logger import get_logger
+from utils.logger import logger
 import sys
 import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 router = APIRouter()
-logger = get_logger(__name__)
 
 @router.get("/{playlist_id}")
 async def playlists(playlist_id: str):

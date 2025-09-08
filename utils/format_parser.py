@@ -1,9 +1,8 @@
 import json
 from typing import Dict, List, Any
 from datetime import datetime
-from .logger import get_logger
+from .logger import logger
 
-logger = get_logger(__name__)
 
 # --- Start of Helper Functions ---
 

@@ -3,11 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from routes import search, videos, playlists
 from config import settings
-from utils.logger import get_logger
+from utils.logger import logger
 import uvicorn
 import time
-
-logger = get_logger(__name__)
 
 app = FastAPI(
     title=settings.API_NAME,
