@@ -1,5 +1,8 @@
 from typing import Dict, List, Any
 from datetime import datetime
+from .logger import get_logger
+
+logger = get_logger(__name__)
 
 # --- Start of Helper Functions ---
 
@@ -11,7 +14,8 @@ def format_duration(seconds):
         m, s = divmod(s, 60)
         h, m = divmod(m, 60)
         return f"{h}:{m:02}:{s:02}" if h else f"{m}:{s:02}"
-    except (ValueError, TypeError):
+    except (ValueError, TypeError) as e:
+        logger.warning(f"Could not format duration for value: {seconds}. Error: {e}")
         return None
 
 def format_number(n):
@@ -31,7 +35,8 @@ def format_compact_number(n):
         if n >= 1_000:
             return f"{n/1_000:.1f}K"
         return str(n)
-    except (ValueError, TypeError):
+    except (ValueError, TypeError) as e:
+        logger.warning(f"Could not format compact number for value: {n}. Error: {e}")
         return str(n)
 
 def format_date(date_str):
@@ -40,7 +45,8 @@ def format_date(date_str):
     try:
         dt = datetime.strptime(date_str, "%Y%m%d")
         return dt.strftime("%b %d, %Y")
-    except (ValueError, TypeError):
+    except (ValueError, TypeError) as e:
+        logger.warning(f"Could not format date for value: {date_str}. Error: {e}")
         return date_str
 
 def format_relative_time(upload_date: str) -> str:
@@ -65,7 +71,8 @@ def format_relative_time(upload_date: str) -> str:
         
         years = days // 365
         return f"{years} year{'s' if years > 1 else ''} ago"
-    except (ValueError, TypeError):
+    except (ValueError, TypeError) as e:
+        logger.warning(f"Could not format relative time for value: {upload_date}. Error: {e}")
         return "Unknown"
 
 # ----------------------------------

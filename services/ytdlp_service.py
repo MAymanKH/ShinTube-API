@@ -9,12 +9,15 @@ from typing import List, Dict, Any
 from fastapi import HTTPException
 from utils.format_parser import format_comments, format_search_results, format_video_info, format_playlist_info
 from utils import exceptions
+from utils.logger import get_logger
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+logger = get_logger(__name__)
 
 async def run_ytdlp_process(args: List[str]):
     """Helper function to execute the yt-dlp process and handle its output."""
     cmd = ["yt-dlp"] + args
+    logger.debug(f"Running yt-dlp command: {' '.join(cmd)}")
     process = await asyncio.create_subprocess_exec(
         *cmd,
         stdout=subprocess.PIPE,
@@ -24,12 +27,14 @@ async def run_ytdlp_process(args: List[str]):
     
     if process.returncode != 0:
         error_message = stderr.decode().strip()
+        logger.error(f"yt-dlp failed with exit code {process.returncode}: {error_message}")
         if "Video unavailable" in error_message or "Private video" in error_message:
             raise exceptions.VideoNotFoundError(error_message)
         if "playlist does not exist" in error_message:
             raise exceptions.PlaylistNotFoundError(error_message)
         raise exceptions.YTDLPError(f"yt-dlp failed: {error_message}")
         
+    logger.debug("yt-dlp process finished successfully.")
     return stdout.decode()
 
 async def search_videos(query: str, limit: int = 15) -> List[Dict[str, Any]]:
