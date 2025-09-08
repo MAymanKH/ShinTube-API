@@ -1,3 +1,4 @@
+import json
 from typing import Dict, List, Any
 from datetime import datetime
 from .logger import get_logger
@@ -217,3 +218,45 @@ async def format_comments(raw_comments: List[Dict[str, Any]], limit: int) -> Dic
         "comment_count": len(limited_comments),
         "comments": limited_comments
     }
+
+async def format_subtitles(raw_subtitles: str) -> List[Dict[str, Any]]:
+    """Formats the JSON subtitles output from yt-dlp into unique tracks with download URLs."""
+    subs = json.loads(raw_subtitles.strip())
+
+    subtitles = []
+    for lang_code, tracks in subs.items():
+        # Skip auto-translated (yt-dlp marks them like "xx-yy") and live chat
+        if "-" in lang_code or lang_code == "live_chat":
+            continue
+
+        # Collect formats with URLs
+        formats = []
+        is_auto = False
+        for track in tracks:
+            ext = track.get("ext")
+            url = track.get("url")
+            if not ext or not url:
+                continue
+            formats.append({"ext": ext, "url": url})
+            if track.get("auto", False):
+                is_auto = True
+
+        if not formats:
+            continue
+
+        # Pick a human-friendly name (e.g. "English")
+        base_name = tracks[0].get("name") or lang_code
+        if is_auto and not base_name.lower().endswith("(auto-generated)"):
+            name = f"{base_name} (auto-generated)"
+        else:
+            name = base_name
+
+        subtitles.append({
+            "language_code": lang_code,
+            "language_name": name,
+            "is_auto_generated": is_auto,
+            "is_auto_translated": False,
+            "formats": formats,  # list of {ext, url}
+        })
+
+    return subtitles

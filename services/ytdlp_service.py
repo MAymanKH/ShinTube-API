@@ -5,9 +5,7 @@ import subprocess
 import json
 import sys
 from typing import List, Dict, Any
-
-from fastapi import HTTPException
-from utils.format_parser import format_comments, format_search_results, format_video_info, format_playlist_info
+from utils.format_parser import format_comments, format_search_results, format_video_info, format_playlist_info, format_subtitles
 from utils import exceptions
 from utils.logger import get_logger
 
@@ -152,3 +150,14 @@ async def get_video_comments(video_id: str, limit: int = 600, sort_by: str = "to
         return await format_comments(raw_comments, limit)
     except json.JSONDecodeError:
         raise exceptions.DataParsingError(f"Could not parse comment data for video ID: {video_id}.")
+
+async def get_video_subtitles(video_id: str) -> List[Dict[str, Any]]:
+    """Get available subtitles for a video"""
+    args = [
+        f"https://youtube.com/watch?v={video_id}",
+        "--print", "%(subtitles)j",
+        "--skip-download",
+        "--ignore-errors"
+    ]
+    output = await run_ytdlp_process(args)
+    return await format_subtitles(output)

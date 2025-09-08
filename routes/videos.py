@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from services.ytdlp_service import get_video_comments, get_video_info
+from services.ytdlp_service import get_video_comments, get_video_info, get_video_subtitles
 from utils import exceptions
 from utils.logger import get_logger
 import sys
@@ -40,3 +40,17 @@ async def video_comments(video_id: str):
     except exceptions.YTDLPError as e:
         logger.error(f"Failed to fetch comments for video_id: {video_id}, error: {e}")
         raise HTTPException(status_code=500, detail=f"Service Error: Failed to fetch comments. {e}")
+
+@router.get("/{video_id}/subtitles")
+async def video_subtitles(video_id: str):
+    try:
+        logger.info(f"Fetching subtitles for video_id: {video_id}")
+        subtitles = await get_video_subtitles(video_id)
+        logger.info(f"Successfully fetched subtitles for video_id: {video_id}")
+        return {"video_id": video_id, "subtitles": subtitles}
+    except exceptions.VideoNotFoundError as e:
+        logger.warning(f"Video not found for subtitles for video_id: {video_id}, error: {e}")
+        raise HTTPException(status_code=404, detail=str(e))
+    except exceptions.YTDLPError as e:
+        logger.error(f"Failed to fetch subtitles for video_id: {video_id}, error: {e}")
+        raise HTTPException(status_code=500, detail=f"Service Error: Failed to fetch subtitles. {e}")
