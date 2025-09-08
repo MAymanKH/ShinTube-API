@@ -18,7 +18,7 @@ async def playlists(playlist_id: str):
         logger.info(f"Successfully fetched playlist_id: {playlist_id}")
         return playlist_info
     except exceptions.PlaylistNotFoundError as e:
-        logger.warning(f"Playlist not found for playlist_id: {playlist_id}, error: {e}")
+        logger.error(f"Playlist not found for playlist_id: {playlist_id}, error: {e}")
         raise HTTPException(status_code=404, detail=str(e))
     except exceptions.YTDLPError as e:
         logger.error(f"Failed to fetch playlist for playlist_id: {playlist_id}, error: {e}")

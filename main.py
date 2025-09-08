@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
-from routes import search, videos, playlists, download
+from routes import search, videos, playlists
 from config import settings
 from utils.logger import get_logger
 import uvicorn
@@ -51,7 +51,6 @@ async def favicon():
 app.include_router(search.router, prefix="/search", tags=["search"])
 app.include_router(videos.router, prefix="/videos", tags=["videos"])
 app.include_router(playlists.router, prefix="/playlists", tags=["playlists"])
-app.include_router(download.router, prefix="/download", tags=["download"])
 
 if __name__ == "__main__":
     uvicorn.run(

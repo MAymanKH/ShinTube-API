@@ -16,7 +16,7 @@ def format_duration(seconds):
         h, m = divmod(m, 60)
         return f"{h}:{m:02}:{s:02}" if h else f"{m}:{s:02}"
     except (ValueError, TypeError) as e:
-        logger.warning(f"Could not format duration for value: {seconds}. Error: {e}")
+        logger.error(f"Could not format duration for value: {seconds}. Error: {e}")
         return None
 
 def format_number(n):
@@ -37,7 +37,7 @@ def format_compact_number(n):
             return f"{n/1_000:.1f}K"
         return str(n)
     except (ValueError, TypeError) as e:
-        logger.warning(f"Could not format compact number for value: {n}. Error: {e}")
+        logger.error(f"Could not format compact number for value: {n}. Error: {e}")
         return str(n)
 
 def format_date(date_str):
@@ -47,7 +47,7 @@ def format_date(date_str):
         dt = datetime.strptime(date_str, "%Y%m%d")
         return dt.strftime("%b %d, %Y")
     except (ValueError, TypeError) as e:
-        logger.warning(f"Could not format date for value: {date_str}. Error: {e}")
+        logger.error(f"Could not format date for value: {date_str}. Error: {e}")
         return date_str
 
 def format_relative_time(upload_date: str) -> str:
@@ -73,11 +73,12 @@ def format_relative_time(upload_date: str) -> str:
         years = days // 365
         return f"{years} year{'s' if years > 1 else ''} ago"
     except (ValueError, TypeError) as e:
-        logger.warning(f"Could not format relative time for value: {upload_date}. Error: {e}")
+        logger.error(f"Could not format relative time for value: {upload_date}. Error: {e}")
         return "Unknown"
 
 # ----------------------------------
 
+# Formats `/search/q={query}` output
 async def format_search_results(raw_results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     formatted_results = []
     for result in raw_results:
@@ -103,6 +104,7 @@ async def format_search_results(raw_results: List[Dict[str, Any]]) -> List[Dict[
         })
     return formatted_results
 
+# Formats `/videos/{video_id}` output
 async def format_video_info(raw_data: Dict[str, Any]) -> Dict[str, Any]:
     video_id = raw_data.get("id")
     thumbnails = [
@@ -137,6 +139,7 @@ async def format_video_info(raw_data: Dict[str, Any]) -> Dict[str, Any]:
         "thumbnails": thumbnails,
     }
 
+# Formats `/playlists/{playlist_id}` output
 async def format_playlist_info(playlist_data: Dict[str, Any], video_entries: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Formats the playlist metadata and its list of videos."""
     channel_id = playlist_data.get('channel_id')
@@ -156,6 +159,7 @@ async def format_playlist_info(playlist_data: Dict[str, Any], video_entries: Lis
         'webpage_url': playlist_data.get('webpage_url')
     }
 
+# Formats `/videos/{video_id}/comments` output
 async def format_comments(raw_comments: List[Dict[str, Any]], limit: int) -> Dict[str, Any]:
     """Formats raw comments, nests replies, sorts by likes, and applies a limit."""
     comment_map = {}
@@ -219,6 +223,7 @@ async def format_comments(raw_comments: List[Dict[str, Any]], limit: int) -> Dic
         "comments": limited_comments
     }
 
+# Formats `/videos/{video_id}/subtitles` output
 async def format_subtitles(raw_subtitles: str) -> List[Dict[str, Any]]:
     """Formats the JSON subtitles output from yt-dlp into unique tracks with download URLs."""
     subs = json.loads(raw_subtitles.strip())

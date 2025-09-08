@@ -12,6 +12,7 @@ from utils.logger import get_logger
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 logger = get_logger(__name__)
 
+# Used to run al yt-dlp processes
 async def run_ytdlp_process(args: List[str]):
     """Helper function to execute the yt-dlp process and handle its output."""
     cmd = ["yt-dlp"] + args
@@ -35,6 +36,7 @@ async def run_ytdlp_process(args: List[str]):
     logger.debug("yt-dlp process finished successfully.")
     return stdout.decode()
 
+# Called by `/search/q={query}`
 async def search_videos(query: str, limit: int = 15) -> List[Dict[str, Any]]:
     args = [
         f"ytsearch{limit}:{query}",
@@ -53,6 +55,7 @@ async def search_videos(query: str, limit: int = 15) -> List[Dict[str, Any]]:
     except json.JSONDecodeError as e:
         raise exceptions.YTDLPError(f"Failed to parse search results: {e}")
 
+# Called by `/videos/{video_id}`
 async def get_video_info(video_id: str) -> Dict[str, Any]:
     args = [
         f"https://youtube.com/watch?v={video_id}",
@@ -71,6 +74,7 @@ async def get_video_info(video_id: str) -> Dict[str, Any]:
     except json.JSONDecodeError:
         raise exceptions.VideoNotFoundError(f"Could not parse video metadata for ID: {video_id}. It may be unavailable.")
 
+# Called by `/playlists/{playlist_id}`
 async def get_playlist_info(playlist_id: str) -> Dict[str, Any]:
     """Get playlist information and video list"""
     args = [
@@ -106,28 +110,7 @@ async def get_playlist_info(playlist_id: str) -> Dict[str, Any]:
 
     return await format_playlist_info(playlist_metadata, video_entries)
 
-# The download_video function remains unchanged as it doesn't format JSON output
-async def download_video(video_id: str, format_id: str = None) -> Dict[str, Any]:
-    temp_dir = tempfile.gettempdir()
-    output_template = os.path.join(temp_dir, f"{video_id}.%(ext)s")
-    
-    args = [f"https://youtube.com/watch?v={video_id}", "--output", output_template]
-    if format_id:
-        args.extend(["-f", format_id])
-    
-    try:
-        await run_ytdlp_process(args)
-        for file in os.listdir(temp_dir):
-            if file.startswith(video_id):
-                file_path = os.path.join(temp_dir, file)
-                return {
-                    "file_path": file_path, "filename": file,
-                    "video_id": video_id, "format_id": format_id
-                }
-        raise exceptions.DownloadError("Download completed but the file was not found.")
-    except exceptions.YTDLPError as e:
-        raise exceptions.DownloadError(f"Download failed: {str(e)}")
-
+# Called by `/videos/{video_id}/comments`
 async def get_video_comments(video_id: str, limit: int = 600, sort_by: str = "top") -> Dict[str, Any]:
     """Get video comments using yt-dlp."""
     extractor_args_string = f"youtube:max_comments={limit};comment_sort={sort_by};comment_mode=all"
@@ -151,6 +134,7 @@ async def get_video_comments(video_id: str, limit: int = 600, sort_by: str = "to
     except json.JSONDecodeError:
         raise exceptions.DataParsingError(f"Could not parse comment data for video ID: {video_id}.")
 
+# Called by `/videos/{video_id}/subtitles`
 async def get_video_subtitles(video_id: str) -> List[Dict[str, Any]]:
     """Get available subtitles for a video"""
     args = [

@@ -18,7 +18,7 @@ async def videos(video_id: str):
         logger.info(f"Successfully fetched info for video_id: {video_id}")
         return video_info
     except exceptions.VideoNotFoundError as e:
-        logger.warning(f"Video not found for video_id: {video_id}, error: {e}")
+        logger.error(f"Video not found for video_id: {video_id}, error: {e}")
         raise HTTPException(status_code=404, detail=str(e))
     except exceptions.YTDLPError as e:
         logger.error(f"Failed to fetch video info for video_id: {video_id}, error: {e}")
@@ -32,7 +32,7 @@ async def video_comments(video_id: str):
         logger.info(f"Successfully fetched comments for video_id: {video_id}")
         return {"video_id": video_id, "result": result}
     except exceptions.VideoNotFoundError as e:
-        logger.warning(f"Video not found for comments for video_id: {video_id}, error: {e}")
+        logger.error(f"Video not found for comments for video_id: {video_id}, error: {e}")
         raise HTTPException(status_code=404, detail=str(e))
     except exceptions.DataParsingError as e:
         logger.error(f"Could not process comment data for video_id: {video_id}, error: {e}")
@@ -49,7 +49,7 @@ async def video_subtitles(video_id: str):
         logger.info(f"Successfully fetched subtitles for video_id: {video_id}")
         return {"video_id": video_id, "subtitles": subtitles}
     except exceptions.VideoNotFoundError as e:
-        logger.warning(f"Video not found for subtitles for video_id: {video_id}, error: {e}")
+        logger.error(f"Video not found for subtitles for video_id: {video_id}, error: {e}")
         raise HTTPException(status_code=404, detail=str(e))
     except exceptions.YTDLPError as e:
         logger.error(f"Failed to fetch subtitles for video_id: {video_id}, error: {e}")
