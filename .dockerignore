@@ -1,0 +1,23 @@
+# Git and Docker source files (not needed inside the image)
+.git
+.gitignore
+.dockerignore
+Dockerfile
+docker-compose.yml
+docker-compose.override.yml
+
+# Python virtual environment and cache
+venv
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE and OS files
+.idea/
+.vscode/
+.DS_Store
+
+# Local environment and log files
+.env
+logs/
+*.log

@@ -1,3 +1,18 @@
-.env
-logs/
+# Python virtual environment and cache
+venv/
 __pycache__/
+*.pyc
+*.pyo
+
+# IDE and OS files
+.idea/
+.vscode/
+.DS_Store
+
+# Local environment and Docker override files
+.env
+docker-compose.override.yml
+
+# Log files
+logs/
+*.log
