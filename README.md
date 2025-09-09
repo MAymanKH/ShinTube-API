@@ -1,18 +1,21 @@
 # 📺 ShinTube API
 
-This is a **FastAPI backend** that uses [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) to fetch video metadata, search results, playlists, and downloadable formats from YouTube.
+A **FastAPI backend** that uses [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) to provide a RESTful API for fetching video metadata, search results, playlists, comments, and subtitles from YouTube.
 
 ---
 
-## 🚀 Features
-- **Search YouTube videos** (`/search`)
-- **Get video details & formats** (`/video/{id}`)
-- **Fetch playlist metadata** (`/playlist/{id}`)
-- **Download videos** in selected format (`/download/{id}`)
-- **CORS enabled** for Flutter frontend
-- **Clean modular structure** for scalability
-- **Fast search results** with approximate upload dates
-- **Multiple thumbnail resolutions**
+## ✨ Features
+
+-   **Search YouTube videos** (`/search`) with pagination.
+-   **Get comprehensive video details** including formats, thumbnails, and chapters (`/videos/{id}`).
+-   **Fetch video comments** (`/videos/{id}/comments`).
+-   **Retrieve available video subtitles** (`/videos/{id}/subtitles`).
+-   **Fetch playlist metadata** and all its videos (`/playlists/{id}`).
+-   **Built with FastAPI** for high performance.
+-   **Asynchronous support** for non-blocking requests.
+-   **CORS enabled** for easy frontend integration.
+-   **Clean, modular, and scalable** project structure.
+-   **Containerized** with Docker for easy setup and deployment.
 
 ---
 
@@ -20,182 +23,151 @@ This is a **FastAPI backend** that uses [`yt-dlp`](https://github.com/yt-dlp/yt-
 
 ```
 ShinTube-API/
-├── main.py                    # FastAPI entrypoint
-├── config.py                  # Settings, environment variables
-├── routes/                    # API endpoints
+├── .dockerignore
+├── .gitignore
+├── config.py                  # Settings and environment variables
+├── docker-compose.yml         # Docker Compose configuration
+├── Dockerfile                 # Docker configuration
+├── main.py                    # FastAPI application entrypoint
+├── README.md
+├── requirements.txt           # Python dependencies
+├── logs/                      # Log files
+├── routes/                    # API endpoints (routers)
 │   ├── __init__.py
+│   ├── playlists.py
 │   ├── search.py
-│   ├── video.py
-│   ├── playlist.py
-│   └── download.py
+│   └── videos.py
 ├── services/                  # Business logic
 │   ├── __init__.py
-│   └── cache_service.py
+│   ├── cache_service.py
 │   └── ytdlp_service.py
-├── utils/                     # Helpers & parsers
-│   ├── format_parser.py
-│   └── exceptions.py
-└── README.md
+└── utils/                     # Helper functions and utilities
+    ├── __init__.py
+    ├── exceptions.py
+    ├── format_parser.py
+    └── logger.py
 ```
 
 ---
 
-## 📦 Installation
+## 🚀 Getting Started
 
-### 1. Prerequisites
-- **Python 3.7+**
-- **yt-dlp** installed globally or in your environment
+You can run the project using Docker (recommended) or by setting up a local Python environment.
 
-### 2. Install yt-dlp
-```bash
-pip install yt-dlp
-```
+### 1. Using Docker (Recommended)
 
-### 3. Clone and setup
-```bash
-git clone https://github.com/yourusername/ShinTube-API.git
-cd ShinTube-API
+**Prerequisites:**
+*   **Docker** and **Docker Compose** installed.
 
-# Create a virtual environment (optional but recommended)
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+**Instructions:**
+1.  Clone the repository:
+    ```bash
+    git clone https://github.com/MAyman007/ShinTube-API.git
+    cd ShinTube-API
+    ```
+2.  Build and run the container using Docker Compose:
+    ```bash
+    docker-compose up --build
+    ```
+The API will be running and accessible at `http://localhost:8000`.
 
-# Install Python dependencies
-pip install fastapi uvicorn
-```
+### 2. Local Python Environment
 
----
+**Prerequisites:**
+*   **Python 3.8+**
+*   **yt-dlp** installed and available in your system's PATH.
 
-## ▶️ Running the Server
-
-```bash
-python main.py
-```
-
-Or using uvicorn directly:
-```bash
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-The API will be available at:
-- **API**: http://localhost:8000
-- **Swagger UI docs**: http://localhost:8000/docs
-- **Health check**: http://localhost:8000
+**Instructions:**
+1.  Clone the repository:
+    ```bash
+    git clone https://github.com/MAyman007/ShinTube-API.git
+    cd ShinTube-API
+    ```
+2.  Create and activate a virtual environment:
+    ```bash
+    python -m venv venv
+    source venv/bin/activate  # On Windows: venv\Scripts\activate
+    ```
+3.  Install the required Python dependencies:
+    ```bash
+    pip install -r requirements.txt
+    ```
+4.  Run the FastAPI server:
+    ```bash
+    uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    ```
 
 ---
 
 ## 🌐 API Endpoints
 
-| Method | Endpoint | Description | Params |
-|--------|----------|-------------|--------|
-| GET | `/` | Health check | - |
-| GET | `/search` | Search YouTube videos | `q` (string), `limit` (int, 1-50) |
-| GET | `/video/{video_id}` | Get video details & formats | - |
-| GET | `/playlist/{playlist_id}` | Get playlist metadata & items | - |
-| GET | `/download/{video_id}` | Download a video in selected format | `format` (string, optional) |
+The API documentation is automatically generated by Swagger UI and is available at `http://localhost:8000/docs`.
+
+| Method | Endpoint                      | Description                               |
+| :----- | :---------------------------- | :---------------------------------------- |
+| GET    | `/`                           | Health check for the API.                 |
+| GET    | `/search`                     | Search for YouTube videos.                |
+| GET    | `/videos/{video_id}`          | Get details for a specific video.         |
+| GET    | `/videos/{video_id}/comments` | Get comments for a specific video.        |
+| GET    | `/videos/{video_id}/subtitles`| Get subtitles for a specific video.       |
+| GET    | `/playlists/{playlist_id}`    | Get metadata and videos for a playlist.   |
 
 ### Example Requests
 
-**Search videos:**
-```
-GET /search?q=hello world
-```
+**Search for videos:**
+`GET /search?q=fastapi&limit=5&page=1`
 
-**Get video info:**
-```
-GET /video/dQw4w9WgXcQ
-```
+**Get video information:**
+`GET /videos/dQw4w9WgXcQ`
 
-**Get playlist:**
-```
-GET /playlist/PLrAXtmRdnEQy_K7ZhqRZZTFPmcNfPfBTN
-```
+**Get video comments:**
+`GET /videos/dQw4w9WgXcQ/comments`
 
-**Download video:**
-```
-GET /download/dQw4w9WgXcQ?format=best
-```
+**Get video subtitles:**
+`GET /videos/dQw4w9WgXcQ/subtitles`
+
+**Get playlist information:**
+`GET /playlists/PL_z_8CaS__t1_TMImq_vrmAbq8i52j_8G`
 
 ---
 
 ## ⚙️ Environment Variables
 
-Create a `.env` file in the root directory:
+The application can be configured using environment variables. You can create a `.env` file in the root directory to manage them.
 
-| Variable | Default Value | Description |
-|----------|---------------|-------------|
-| `API_NAME` | `"YouTube API Backend"` | Name of the API |
-| `HOST` | `"0.0.0.0"` | Host of the API |
-| `PORT` | `8000` | Port of the API |
-| `DEBUG` | `True` | Enable debug mode |
-| `CACHE_EXPIRY_SECONDS` | `3600` | Cache lifetime in seconds |
-| `ALLOWED_ORIGINS` | `["*"]` | Allowed CORS origins |
+| Variable          | Default Value | Description                               |
+| :---------------- | :------------ | :---------------------------------------- |
+| `API_NAME`        | `ShinTube API`| The name of the API.                      |
+| `HOST`            | `0.0.0.0`     | The host address for the server.          |
+| `PORT`            | `8000`        | The port for the server.                  |
+| `DEBUG`           | `True`        | Toggles debug mode.                       |
+| `ALLOWED_ORIGINS` | `["*"]`       | A list of allowed CORS origins.           |
 
-Example `.env` file:
+**Example `.env` file:**
 ```env
-API_NAME=ShinTube API
+API_NAME="My ShinTube API"
 HOST="0.0.0.0"
 PORT=8000
 DEBUG=False
-CACHE_EXPIRY_SECONDS=7200
-ALLOWED_ORIGINS=["http://localhost:3000", "https://yourdomain.com"]
+ALLOWED_ORIGINS='["http://localhost:3000", "https://my-frontend.com"]'
 ```
 
 ---
 
-## 📝 Response Format
+## 📝 Notes
 
-**Search Response:**
-```json
-{
-  "query": "hello world",
-  "limit": 15,
-  "results": [
-    {
-      "video_id": "u7JMhVI7taQ",
-      "title": "Alan Walker & Torine - Hello World",
-      "uploader": "Alan Walker",
-      "duration": 176,
-      "duration_string": "2:56",
-      "view_count": 25503715,
-      "view_count_string": "25.5M views",
-      "upload_date": "20220815",
-      "upload_date_string": "2 years ago",
-      "thumbnails": [
-        {
-          "url": "https://img.youtube.com/vi/u7JMhVI7taQ/mqdefault.jpg",
-          "width": 320,
-          "height": 180,
-          "resolution": "320x180"
-        },
-        {
-          "url": "https://img.youtube.com/vi/u7JMhVI7taQ/hqdefault.jpg",
-          "width": 480,
-          "height": 360,
-          "resolution": "480x360"
-        }
-      ],
-      "url": "https://youtube.com/watch?v=u7JMhVI7taQ"
-    }
-  ]
-}
-```
+*   This project acts as a wrapper around the `yt-dlp` command-line tool. Its functionality is dependent on `yt-dlp`.
+*   YouTube's structure can change, which may break `yt-dlp`. Keep `yt-dlp` updated to ensure the API remains functional.
+*   This project does not bypass any of YouTube's Terms of Service; it only retrieves publicly available data.
 
 ---
 
-## 📌 Notes
+## 🤝 Contributing
 
-- This project does **not** bypass YouTube's Terms of Service — it only processes publicly available data.
-- `yt-dlp` behavior can change if YouTube updates its site — keep `yt-dlp` updated.
+Contributions are welcome! To contribute:
 
----
-
-## 🛠️ Development
-
-To contribute or modify:
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+1.  Fork the repository.
+2.  Create a new feature branch (`git checkout -b feature/YourFeature`).
+3.  Make your changes and commit them (`git commit -m 'Add some feature'`).
+4.  Push to the branch (`git push origin feature/YourFeature`).
+5.  Open a Pull Request.
