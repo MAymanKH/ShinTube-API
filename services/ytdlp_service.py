@@ -122,7 +122,6 @@ async def get_video_comments(video_id: str, comments_limit: int, comments_replie
         "--no-download",
         "--skip-download",
     ]
-
     try:
         output = await run_ytdlp_process(args)
         data = json.loads(output)
@@ -142,5 +141,8 @@ async def get_video_subtitles(video_id: str) -> List[Dict[str, Any]]:
         "--skip-download",
         "--ignore-errors"
     ]
-    output = await run_ytdlp_process(args)
-    return await format_subtitles(output)
+    try:
+        output = await run_ytdlp_process(args)
+        return await format_subtitles(output)
+    except json.JSONDecodeError:
+        raise exceptions.DataParsingError(f"Could not parse subtitle data for video ID: {video_id}.")
