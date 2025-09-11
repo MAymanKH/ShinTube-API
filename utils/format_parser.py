@@ -265,3 +265,32 @@ async def format_subtitles(raw_subtitles: str) -> List[Dict[str, Any]]:
         })
 
     return subtitles or []
+
+# Formats `/channels/{channel_id}` output
+async def format_channel_info(raw_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Formats the channel metadata."""
+    raw_thumbnails = raw_data.get("thumbnails", [])
+    banners = []
+    avatars = []
+    if raw_thumbnails:
+        for thumb in raw_thumbnails:
+            thumb_id = thumb.get("id", "")
+            height = thumb.get("height")
+            width = thumb.get("width")
+            if 'avatar' in thumb_id or (height and width and height == width): avatars.append(thumb)
+            elif 'banner' in thumb_id or (height and width and width > height): banners.append(thumb)
+
+    return {
+        "channel_id": raw_data.get("channel_id"),
+        "channel_url": raw_data.get("channel_url"),
+        "title": raw_data.get("title"),
+        "description": raw_data.get("description"),
+        "channel_follower_count": raw_data.get("channel_follower_count"),
+        "channel_follower_count_string": format_number(raw_data.get("channel_follower_count")),
+        "channel_follower_count_compact_string": format_compact_number(raw_data.get("channel_follower_count")),
+        "view_count": raw_data.get("view_count"),
+        "view_count_string": format_number(raw_data.get("view_count")),
+        "view_count_compact_string": format_compact_number(raw_data.get("view_count")),
+        "banners": banners,
+        "avatars": avatars,
+    }

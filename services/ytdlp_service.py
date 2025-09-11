@@ -5,7 +5,7 @@ import subprocess
 import json
 import sys
 from typing import List, Dict, Any
-from utils.format_parser import format_comments, format_search_results, format_video_info, format_playlist_info, format_subtitles
+from utils.format_parser import format_comments, format_search_results, format_video_info, format_playlist_info, format_subtitles, format_channel_info
 from utils import exceptions
 from utils.logger import logger
 
@@ -30,6 +30,8 @@ async def run_ytdlp_process(args: List[str]):
             raise exceptions.VideoNotFoundError(error_message)
         if "playlist does not exist" in error_message:
             raise exceptions.PlaylistNotFoundError(error_message)
+        if "channel does not exist" in error_message:
+            raise exceptions.ChannelNotFoundError(error_message)
         raise exceptions.YTDLPError(f"yt-dlp failed: {error_message}")
         
     logger.debug("yt-dlp process finished successfully.")
@@ -146,3 +148,42 @@ async def get_video_subtitles(video_id: str) -> List[Dict[str, Any]]:
         return await format_subtitles(output)
     except json.JSONDecodeError:
         raise exceptions.DataParsingError(f"Could not parse subtitle data for video ID: {video_id}.")
+
+# Called by `/channels/{channel_id}`
+async def get_channel_info(channel_id: str) -> Dict[str, Any]:
+    """Get channel information"""
+    url = f"https://www.youtube.com/channel/{channel_id}"
+    args = [
+        url,
+        "--dump-single-json",
+        "--playlist-items", "0",
+        "--no-download",
+    ]
+    try:
+        output = await run_ytdlp_process(args)
+        if not output.strip():
+            raise exceptions.ChannelNotFoundError(f"No metadata found for channel_id: {channel_id}")
+        info = json.loads(output)
+        return await format_channel_info(info)
+    except json.JSONDecodeError:
+        raise exceptions.ChannelNotFoundError(f"Could not parse channel metadata for ID: {channel_id}. It may be unavailable.")
+
+# Called by `/channels/{channel_id}/videos`
+async def get_channel_videos(channel_id: str, limit: int) -> List[Dict[str, Any]]:
+    """Get videos from a channel"""
+    url = f"https://www.youtube.com/channel/{channel_id}/videos"
+    args = [
+        url,
+        "--dump-json",
+        "--playlist-items", f"1-{limit}",
+        "--no-download",
+        "--flat-playlist",
+        "--extractor-args",
+        "youtubetab:approximate_date"
+    ]
+    try:
+        output = await run_ytdlp_process(args)
+        videos = [json.loads(line) for line in output.strip().split('\n') if line]
+        return await format_search_results(videos)
+    except json.JSONDecodeError as e:
+        raise exceptions.YTDLPError(f"Failed to parse channel videos: {e}")
