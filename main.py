@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from routes import search, videos, playlists, channels
+from services.cache_service import clear_cache, get_cache_stats
 from config import settings
 from utils.logger import logger
 import uvicorn
@@ -45,6 +46,16 @@ async def health_check():
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon():
     return Response(status_code=204) # 204 No Content
+
+# Cache management
+@app.post("/cache/clear", tags=["cache"])
+async def clear_api_cache():
+    clear_cache()
+    return {"status": "cache cleared"}
+
+@app.get("/cache/stats", tags=["cache"])
+async def get_api_cache_stats():
+    return get_cache_stats()
 
 # Mount routers
 app.include_router(search.router, prefix="/search", tags=["search"])

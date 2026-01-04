@@ -8,6 +8,7 @@ from typing import List, Dict, Any, AsyncGenerator
 from utils.format_parser import format_comments, format_search_results, format_video_info, format_playlist_info, format_subtitles, format_channel_info, format_video_formats
 from utils import exceptions
 from utils.logger import logger
+from services.cache_service import cached
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -38,6 +39,7 @@ async def run_ytdlp_process(args: List[str]):
     return stdout.decode()
 
 # Called by `/search/q={query}`
+@cached()
 async def search_videos(query: str, limit: int = 15) -> List[Dict[str, Any]]:
     args = [
         f"ytsearch{limit}:{query}",
@@ -57,6 +59,7 @@ async def search_videos(query: str, limit: int = 15) -> List[Dict[str, Any]]:
         raise exceptions.YTDLPError(f"Failed to parse search results: {e}")
 
 # Called by `/videos/{video_id}`
+@cached()
 async def get_video_info(video_id: str) -> Dict[str, Any]:
     args = [
         f"https://youtube.com/watch?v={video_id}",
@@ -76,6 +79,7 @@ async def get_video_info(video_id: str) -> Dict[str, Any]:
         raise exceptions.VideoNotFoundError(f"Could not parse video metadata for ID: {video_id}. It may be unavailable.")
 
 # Called by `/playlists/{playlist_id}`
+@cached()
 async def get_playlist_info(playlist_id: str) -> Dict[str, Any]:
     """Get playlist information and video list"""
     args = [
@@ -112,6 +116,7 @@ async def get_playlist_info(playlist_id: str) -> Dict[str, Any]:
     return await format_playlist_info(playlist_metadata, video_entries)
 
 # Called by `/videos/{video_id}/comments`
+@cached()
 async def get_video_comments(video_id: str, comments_limit: int, comments_replies_limit: int, sort_by: str = "top") -> Dict[str, Any]:
     """Get video comments using yt-dlp."""
     extractor_args_string = f"youtube:max_comments={comments_replies_limit};comment_sort={sort_by};comment_mode=all"
@@ -135,6 +140,7 @@ async def get_video_comments(video_id: str, comments_limit: int, comments_replie
         raise exceptions.DataParsingError(f"Could not parse comment data for video ID: {video_id}.")
 
 # Called by `/videos/{video_id}/subtitles`
+@cached()
 async def get_video_subtitles(video_id: str) -> List[Dict[str, Any]]:
     """Get available subtitles for a video"""
     args = [
@@ -150,6 +156,7 @@ async def get_video_subtitles(video_id: str) -> List[Dict[str, Any]]:
         raise exceptions.DataParsingError(f"Could not parse subtitle data for video ID: {video_id}.")
 
 # Called by `/channels/{channel_id}`
+@cached()
 async def get_channel_info(channel_id: str) -> Dict[str, Any]:
     """Get channel information"""
     url = f"https://www.youtube.com/channel/{channel_id}"
@@ -169,6 +176,7 @@ async def get_channel_info(channel_id: str) -> Dict[str, Any]:
         raise exceptions.ChannelNotFoundError(f"Could not parse channel metadata for ID: {channel_id}. It may be unavailable.")
 
 # Called by `/channels/{channel_id}/videos`
+@cached()
 async def get_channel_videos(channel_id: str, limit: int) -> List[Dict[str, Any]]:
     """Get videos from a channel"""
     url = f"https://www.youtube.com/channel/{channel_id}/videos"
@@ -189,6 +197,7 @@ async def get_channel_videos(channel_id: str, limit: int) -> List[Dict[str, Any]
         raise exceptions.YTDLPError(f"Failed to parse channel videos: {e}")
 
 # Called by `/videos/{video_id}/formats`
+@cached()
 async def get_video_formats(video_id: str, filter_type: str = "all") -> List[Dict[str, Any]]:
     args = [
         f"https://youtube.com/watch?v={video_id}",
