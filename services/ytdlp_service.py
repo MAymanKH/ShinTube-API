@@ -203,6 +203,50 @@ async def get_video_formats(video_id: str, filter_type: str = "all") -> List[Dic
         if not output.strip():
             raise exceptions.VideoNotFoundError(f"No metadata found for video_id: {video_id}")
         info = json.loads(output)
-        return await format_video_formats(info.get('formats', []), filter_type, info.get('duration'))
+        return await format_video_formats(info.get('formats', []), filter_type)
     except json.JSONDecodeError:
         raise exceptions.VideoNotFoundError(f"Could not parse video metadata for ID: {video_id}. It may be unavailable.")
+
+# Called by `/videos/{video_id}/download`
+async def get_video_stream(video_id: str, format_id: str) -> AsyncGenerator[bytes, None]:
+    cmd = [
+        "yt-dlp",
+        "-f", format_id,
+        "-o", "-",
+        f"https://youtube.com/watch?v={video_id}"
+    ]
+    
+    logger.debug(f"Starting video stream for video_id: {video_id} with format: {format_id}")
+    
+    process = await asyncio.create_subprocess_exec(
+        *cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
+
+    try:
+        while True:
+            chunk = await process.stdout.read(64 * 1024)
+            if not chunk:
+                break
+            yield chunk
+            
+        return_code = await process.wait()
+        if return_code != 0:
+            stderr = await process.stderr.read()
+            error_message = stderr.decode().strip()
+            logger.error(f"Stream process failed with code {return_code}: {error_message}")
+            
+    except Exception as e:
+        logger.error(f"Error during streaming: {e}")
+        try:
+            process.kill()
+        except ProcessLookupError:
+            pass
+        raise e
+    finally:
+        if process.returncode is None:
+            try:
+                process.kill()
+            except ProcessLookupError:
+                pass

@@ -68,3 +68,19 @@ async def video_formats(video_id: str, type: str = Query("all", enum=["all", "vi
     except exceptions.YTDLPError as e:
         logger.error(f"Failed to fetch formats for video_id: {video_id}, error: {e}")
         raise HTTPException(status_code=500, detail=f"Service Error: Failed to fetch formats. {e}")
+
+@router.get("/{video_id}/download")
+async def download_video(video_id: str, format_id: str = Query("b", description="The format ID to download")):
+    try:
+        logger.info(f"Starting download stream for video_id: {video_id}, format_id: {format_id}")
+        
+        stream_generator = get_video_stream(video_id, format_id)
+        
+        return StreamingResponse(
+            stream_generator,
+            media_type="application/octet-stream",
+            headers={"Content-Disposition": f'attachment; filename="{video_id}.mp4"'}
+        )
+    except Exception as e:
+        logger.error(f"Failed to start download stream for video_id: {video_id}, error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to start download stream: {e}")
