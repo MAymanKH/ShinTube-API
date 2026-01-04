@@ -3,3 +3,4 @@ uvicorn
 yt-dlp
 pydantic-settings
 loguru
+cachetools
