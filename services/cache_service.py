@@ -31,16 +31,3 @@ def cached(key_builder=None):
             return result
         return wrapper
     return decorator
-
-def clear_cache():
-    """Clears the entire cache."""
-    cache.clear()
-    logger.info("Cache cleared")
-
-def get_cache_stats():
-    """Returns cache statistics."""
-    return {
-        "size": len(cache),
-        "maxsize": cache.maxsize,
-        "ttl": cache.ttl
-    }

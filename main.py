@@ -47,16 +47,6 @@ async def health_check():
 async def favicon():
     return Response(status_code=204) # 204 No Content
 
-# Cache management
-@app.post("/cache/clear", tags=["cache"])
-async def clear_api_cache():
-    clear_cache()
-    return {"status": "cache cleared"}
-
-@app.get("/cache/stats", tags=["cache"])
-async def get_api_cache_stats():
-    return get_cache_stats()
-
 # Mount routers
 app.include_router(search.router, prefix="/search", tags=["search"])
 app.include_router(videos.router, prefix="/videos", tags=["videos"])
