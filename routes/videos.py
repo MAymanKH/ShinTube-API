@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException
-from services.ytdlp_service import get_video_comments, get_video_info, get_video_subtitles
+from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import StreamingResponse
+from services.ytdlp_service import get_video_comments, get_video_info, get_video_subtitles, get_video_formats, get_video_stream
 from utils import exceptions
 from utils.logger import logger
 import sys
@@ -53,3 +54,17 @@ async def video_subtitles(video_id: str):
     except exceptions.YTDLPError as e:
         logger.error(f"Failed to fetch subtitles for video_id: {video_id}, error: {e}")
         raise HTTPException(status_code=500, detail=f"Service Error: Failed to fetch subtitles. {e}")
+
+@router.get("/{video_id}/formats")
+async def video_formats(video_id: str, type: str = Query("all", enum=["all", "video", "audio", "merged"], description="Filter formats by type: 'audio' (audio only), 'video' (any video format), 'merged' (video+audio), or 'all'")):
+    try:
+        logger.info(f"Fetching formats for video_id: {video_id} with filter: {type}")
+        formats = await get_video_formats(video_id, type)
+        logger.info(f"Successfully fetched formats for video_id: {video_id}")
+        return {"video_id": video_id, "formats": formats}
+    except exceptions.VideoNotFoundError as e:
+        logger.error(f"Video not found for formats for video_id: {video_id}, error: {e}")
+        raise HTTPException(status_code=404, detail=str(e))
+    except exceptions.YTDLPError as e:
+        logger.error(f"Failed to fetch formats for video_id: {video_id}, error: {e}")
+        raise HTTPException(status_code=500, detail=f"Service Error: Failed to fetch formats. {e}")

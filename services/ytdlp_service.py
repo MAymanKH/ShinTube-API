@@ -4,8 +4,8 @@ import tempfile
 import subprocess
 import json
 import sys
-from typing import List, Dict, Any
-from utils.format_parser import format_comments, format_search_results, format_video_info, format_playlist_info, format_subtitles, format_channel_info
+from typing import List, Dict, Any, AsyncGenerator
+from utils.format_parser import format_comments, format_search_results, format_video_info, format_playlist_info, format_subtitles, format_channel_info, format_video_formats
 from utils import exceptions
 from utils.logger import logger
 
@@ -187,3 +187,22 @@ async def get_channel_videos(channel_id: str, limit: int) -> List[Dict[str, Any]
         return await format_search_results(videos)
     except json.JSONDecodeError as e:
         raise exceptions.YTDLPError(f"Failed to parse channel videos: {e}")
+
+# Called by `/videos/{video_id}/formats`
+async def get_video_formats(video_id: str, filter_type: str = "all") -> List[Dict[str, Any]]:
+    args = [
+        f"https://youtube.com/watch?v={video_id}",
+        "--dump-json",
+        "--no-download",
+        "--skip-download",
+        "--no-playlist",
+        "--ignore-errors"
+    ]
+    try:
+        output = await run_ytdlp_process(args)
+        if not output.strip():
+            raise exceptions.VideoNotFoundError(f"No metadata found for video_id: {video_id}")
+        info = json.loads(output)
+        return await format_video_formats(info.get('formats', []), filter_type, info.get('duration'))
+    except json.JSONDecodeError:
+        raise exceptions.VideoNotFoundError(f"Could not parse video metadata for ID: {video_id}. It may be unavailable.")

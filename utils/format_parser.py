@@ -294,3 +294,45 @@ async def format_channel_info(raw_data: Dict[str, Any]) -> Dict[str, Any]:
         "banners": banners,
         "avatars": avatars,
     }
+
+# Formats `/videos/{video_id}/formats` output
+async def format_video_formats(raw_formats: List[Dict[str, Any]], filter_type: str = "all", duration: int = None) -> List[Dict[str, Any]]:
+    formatted_formats = []
+    for fmt in raw_formats:
+        vcodec = fmt.get('vcodec')
+        acodec = fmt.get('acodec')
+        resolution = fmt.get('resolution')
+
+        # Determine format type
+        has_video = (vcodec != 'none' and vcodec is not None)
+        is_audio_only = (vcodec == 'none' or vcodec is None) and (acodec != 'none' and acodec is not None)
+        is_merged = (vcodec != 'none' and vcodec is not None) and (acodec != 'none' and acodec is not None)
+
+        # Filter logic
+        if filter_type == "video" and not has_video: continue
+        if filter_type == "audio" and not is_audio_only: continue
+        if filter_type == "merged" and not is_merged: continue
+
+        filesize = fmt.get('filesize') or fmt.get('filesize_approx')
+        if filesize is None and duration and fmt.get('tbr'):
+            try:
+                # Estimate filesize: (bitrate (kbit/s) * 1000 / 8) * duration (s)
+                filesize = int((float(fmt['tbr']) * 1000 / 8) * float(duration))
+            except (ValueError, TypeError):
+                pass
+
+        if resolution == 'audio only': pass
+        elif not resolution and fmt.get('width') and fmt.get('height'): resolution = f"{fmt.get('width')}x{fmt.get('height')}"
+
+        formatted_formats.append({
+            'format_id': fmt.get('format_id'),
+            'extension': fmt.get('ext'),
+            'resolution': resolution,
+            'filesize': filesize,
+            'filesize_string': format_compact_number(filesize),
+            'format_note': fmt.get('format_note'),
+            'vcodec': vcodec,
+            'acodec': acodec,
+            'tbr': fmt.get('tbr')
+        })
+    return formatted_formats
