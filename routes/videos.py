@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
 from services.ytdlp_service import get_video_comments, get_video_info, get_video_subtitles, get_video_formats, get_video_stream
 from utils import exceptions
+from utils.format_parser import format_download_filename
 from utils.logger import logger
 import sys
 import os
@@ -73,13 +74,17 @@ async def video_formats(request: Request, video_id: str, type: str = Query("all"
 async def download_video(request: Request, video_id: str, format_id: str = Query("b", description="The format ID to download")):
     try:
         logger.info(f"Starting download stream for video_id: {video_id}, format_id: {format_id}")
-        
+        # Fetch video info for title
+        video_info = await get_video_info(video_id)
+        title = video_info.get("title", video_id)
+        formats = []
+        if format_id != "b": formats = await get_video_formats(video_id)
+        filename = await format_download_filename(title, format_id, formats)
         stream_generator = get_video_stream(video_id, format_id)
-        
         return StreamingResponse(
             stream_generator,
             media_type="application/octet-stream",
-            headers={"Content-Disposition": f'attachment; filename="{video_id}.mp4"'}
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
         )
     except Exception as e:
         logger.error(f"Failed to start download stream for video_id: {video_id}, error: {e}")

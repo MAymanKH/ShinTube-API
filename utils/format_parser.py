@@ -1,4 +1,5 @@
 import json
+import re
 from typing import Dict, List, Any
 from datetime import datetime
 from .logger import logger
@@ -336,3 +337,26 @@ async def format_video_formats(raw_formats: List[Dict[str, Any]], filter_type: s
             'tbr': fmt.get('tbr')
         })
     return formatted_formats
+
+async def format_download_filename(title: str, format_id: str, formats: List[Dict[str, Any]] = None) -> str:
+    # Sanitize title
+    safe_title = re.sub(r'[\\/*?:"<>|]', "", title)
+    safe_title = safe_title.strip()
+    
+    # Fetch formats to find resolution/quality
+    quality_label = ""
+    extension = "mp4"
+    
+    if format_id != "b" and formats:
+        for fmt in formats:
+            if fmt.get("format_id") == format_id:
+                resolution = fmt.get("resolution")
+                note = fmt.get("format_note")
+                ext = fmt.get("extension")
+
+                if resolution and resolution != "audio only": quality_label = f"_{resolution}"
+                elif note: quality_label = f"_{note}"
+                if ext: extension = ext
+                break
+    else: quality_label = "_best"
+    return f"{safe_title}{quality_label}.{extension}"
