@@ -1,19 +1,21 @@
 # 📺 ShinTube API
 
-A **FastAPI backend** that uses [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) to provide a RESTful API for fetching video metadata, search results, playlists, comments, and subtitles from YouTube.
+A **FastAPI backend** that uses [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) to provide a RESTful API for downloading and fetching public data from YouTube.
 
 ---
 
 ## ✨ Features
 
--   **Search YouTube videos** (`/search`) with pagination.
--   **Get comprehensive video details** including formats, thumbnails, and chapters (`/videos/{id}`).
+-   **Search YouTube videos** with optional limit and pagination (`/search`).
+-   **Get comprehensive video details** including metrics, thumbnails, id, etc (`/videos/{id}`).
+-   **Get video formats and download/stream videos** (`/videos/{id}/formats`, `/videos/{id}/download`).
 -   **Fetch video comments** (`/videos/{id}/comments`).
 -   **Retrieve available video subtitles** (`/videos/{id}/subtitles`).
--   **Get video formats and download/stream videos** (`/videos/{id}/formats`, `/videos/{id}/download`).
 -   **Fetch playlist metadata** and all its videos (`/playlists/{id}`).
 -   **Get comprehensive channel details** (`/channels/{id}`).
 -   **Fetch a channel's videos** with an optional limit (`/channels/{id}/videos`).
+-   **In-memory Caching** for improved performance on repeated requests.
+-   **Rate Limiting** to prevent abuse and ensure stability.
 -   **Built with FastAPI** for high performance.
 -   **Asynchronous support** for non-blocking requests.
 -   **CORS enabled** for easy frontend integration.
@@ -49,6 +51,7 @@ ShinTube-API/
     ├── __init__.py
     ├── exceptions.py
     ├── format_parser.py
+    ├── limiter.py
     └── logger.py
 ```
 
@@ -66,7 +69,7 @@ You can run the project using Docker (recommended) or by setting up a local Pyth
 **Instructions:**
 1.  Clone the repository:
     ```bash
-    git clone https://github.com/MAyman007/ShinTube-API.git
+    git clone https://github.com/MAymanKH/ShinTube-API.git
     cd ShinTube-API
     ```
 2.  Build and run the container using Docker Compose:
@@ -78,16 +81,15 @@ The API will be running and accessible at `http://localhost:8000`.
 ### 2. Local Python Environment
 
 **Prerequisites:**
-*   **Python 3.8+**
-*   **yt-dlp** installed and available in your system's PATH.
+*   **Python 3.8+** installed and available in your system's PATH.
 
 **Instructions:**
 1.  Clone the repository:
     ```bash
-    git clone https://github.com/MAyman007/ShinTube-API.git
+    git clone https://github.com/MAymanKH/ShinTube-API.git
     cd ShinTube-API
     ```
-2.  Create and activate a virtual environment:
+2.  Create and activate a virtual environment: (Optional)
     ```bash
     python -m venv venv
     source venv/bin/activate  # On Windows: venv\Scripts\activate
@@ -96,9 +98,9 @@ The API will be running and accessible at `http://localhost:8000`.
     ```bash
     pip install -r requirements.txt
     ```
-4.  Run the FastAPI server:
+4.  Run the API:
     ```bash
-    uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    python main.py
     ```
 
 ---
@@ -161,6 +163,9 @@ The application can be configured using environment variables. You can create a 
 | `HOST`            | `0.0.0.0`     | The host address for the server.          |
 | `PORT`            | `8000`        | The port for the server.                  |
 | `DEBUG`           | `True`        | Toggles debug mode.                       |
+| `CACHE_EXPIRY_SECONDS` | `3600`   | Cache TTL in seconds.                     |
+| `RATE_LIMIT_ENABLED` | `True`     | Enable or disable rate limiting.          |
+| `DEFAULT_RATE_LIMIT` | `"100/minute"` | Global rate limit per IP.             |
 | `ALLOWED_ORIGINS` | `["*"]`       | A list of allowed CORS origins.           |
 
 **Example `.env` file:**
@@ -169,7 +174,10 @@ API_NAME="My ShinTube API"
 HOST="0.0.0.0"
 PORT=8000
 DEBUG=False
-ALLOWED_ORIGINS='["http://localhost:3000", "https://my-frontend.com"]'
+CACHE_EXPIRY_SECONDS=1800
+RATE_LIMIT_ENABLED=True
+DEFAULT_RATE_LIMIT="50/minute"
+ALLOWED_ORIGINS='["http://localhost:8000", "https://my-frontend.com"]'
 ```
 
 ---
