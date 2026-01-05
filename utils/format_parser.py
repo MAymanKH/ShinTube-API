@@ -104,6 +104,23 @@ async def format_search_results(raw_results: List[Dict[str, Any]]) -> List[Dict[
         })
     return formatted_results
 
+# Formats `/search/q={query}&type=playlist` output
+async def format_playlist_search_results(raw_results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    formatted_results = []
+    for result in raw_results:
+        playlist_id = result.get('id')
+        thumbnails = result.get('thumbnails', [])
+
+        formatted_results.append({
+            'playlist_id': playlist_id,
+            'url': result.get('url'),
+            'title': result.get('title'),
+            'uploader': result.get('uploader') or result.get('channel'),
+            'video_count': result.get('playlist_count'),
+            'thumbnails': thumbnails,
+        })
+    return formatted_results
+
 # Formats `/videos/{video_id}` output
 async def format_video_info(raw_data: Dict[str, Any]) -> Dict[str, Any]:
     video_id = raw_data.get("id")

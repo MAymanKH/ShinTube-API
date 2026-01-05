@@ -5,7 +5,7 @@ import subprocess
 import json
 import sys
 from typing import List, Dict, Any, AsyncGenerator
-from utils.format_parser import format_comments, format_search_results, format_video_info, format_playlist_info, format_subtitles, format_channel_info, format_video_formats
+from utils.format_parser import format_comments, format_search_results, format_playlist_search_results, format_video_info, format_playlist_info, format_subtitles, format_channel_info, format_video_formats
 from utils import exceptions
 from utils.logger import logger
 from services.cache_service import cached
@@ -57,6 +57,69 @@ async def search_videos(query: str, limit: int = 15) -> List[Dict[str, Any]]:
         return await format_search_results(videos)
     except json.JSONDecodeError as e:
         raise exceptions.YTDLPError(f"Failed to parse search results: {e}")
+
+# Called by `/search/q={query}&type=playlist`
+@cached()
+async def search_playlists(query: str, limit: int = 15, enrich_metadata: bool = True) -> List[Dict[str, Any]]:
+    # Use the search URL with playlist filter (sp=EgIQAw%253D%253D)
+    # Note: yt-dlp doesn't support a direct prefix for playlist search like ytsearch:, 
+    # so we use the search URL.
+    search_url = f"https://www.youtube.com/results?search_query={query}&sp=EgIQAw%253D%253D"
+    
+    args = [
+        search_url,
+        "--dump-json",
+        "--flat-playlist",
+        "--no-download",
+        "--no-warnings",
+        "--quiet",
+        "--playlist-end", str(limit)
+    ]
+    try:
+        output = await run_ytdlp_process(args)
+        playlists = [json.loads(line) for line in output.strip().split('\n') if line]
+        
+        # Enrich playlists with metadata (uploader, video count)
+        # We do this by fetching the first video of each playlist, which contains playlist metadata
+        if enrich_metadata and playlists:
+            playlist_urls = [p.get('url') for p in playlists if p.get('url')]
+            if playlist_urls:
+                enrich_args = [
+                    "--dump-json",
+                    "--flat-playlist",
+                    "--no-download",
+                    "--no-warnings",
+                    "--quiet",
+                    "--playlist-end", "1",
+                    "--ignore-errors"
+                ] + playlist_urls
+                
+                try:
+                    enrich_output = await run_ytdlp_process(enrich_args)
+                    metadata_list = [json.loads(line) for line in enrich_output.strip().split('\n') if line]
+                    
+                    # Create a map of playlist_id -> metadata
+                    metadata_map = {}
+                    for meta in metadata_list:
+                        p_id = meta.get('playlist_id')
+                        if p_id:
+                            metadata_map[p_id] = meta
+                    
+                    # Update original playlists
+                    for p in playlists:
+                        p_id = p.get('id')
+                        if p_id in metadata_map:
+                            meta = metadata_map[p_id]
+                            p['uploader'] = meta.get('playlist_uploader')
+                            p['channel'] = meta.get('playlist_channel')
+                            p['playlist_count'] = meta.get('playlist_count')
+                            
+                except Exception as e:
+                    logger.warning(f"Failed to enrich playlist metadata: {e}")
+        
+        return await format_playlist_search_results(playlists)
+    except json.JSONDecodeError as e:
+        raise exceptions.YTDLPError(f"Failed to parse playlist search results: {e}")
 
 # Called by `/videos/{video_id}`
 @cached()
