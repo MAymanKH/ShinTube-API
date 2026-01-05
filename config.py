@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     PORT: int = 8000
     DEBUG: bool = True
     CACHE_EXPIRY_SECONDS: int = 3600
+    RATE_LIMIT_ENABLED: bool = True
+    DEFAULT_RATE_LIMIT: str = "100/minute"
     ALLOWED_ORIGINS: List[str] = ["*"]
 
     class Config:

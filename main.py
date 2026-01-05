@@ -1,10 +1,12 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from routes import search, videos, playlists, channels
-from services.cache_service import clear_cache, get_cache_stats
 from config import settings
 from utils.logger import logger
+from utils.limiter import limiter
 import uvicorn
 import time
 
@@ -13,6 +15,10 @@ app = FastAPI(
     version="1.0.0",
     debug=settings.DEBUG
 )
+
+# Rate Limiting
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Enable CORS using config settings
 app.add_middleware(
@@ -35,7 +41,7 @@ async def log_requests(request: Request, call_next):
 
 # Health check endpoint
 @app.get("/")
-async def health_check():
+async def health_check(request: Request):
     return {
         "status": "ok",
         "api_name": settings.API_NAME,
@@ -44,7 +50,7 @@ async def health_check():
 
 # Dismissing favicon 404 errors
 @app.get("/favicon.ico", include_in_schema=False)
-async def favicon():
+async def favicon(request: Request):
     return Response(status_code=204) # 204 No Content
 
 # Mount routers

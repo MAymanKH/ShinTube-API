@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter, Query, HTTPException, Request
 from services.ytdlp_service import search_videos
 from utils import exceptions
 from utils.logger import logger
@@ -11,6 +11,7 @@ router = APIRouter()
 
 @router.get("/")
 async def search(
+    request: Request,
     q: str = Query(..., description="Search query"),
     limit: int = Query(15, ge=1, le=50, description="Number of results to return"),
     page: int = Query(1, ge=1, description="Page number"),

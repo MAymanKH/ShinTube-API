@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from services.ytdlp_service import get_channel_info, get_channel_videos
 from utils import exceptions
 from utils.logger import logger
@@ -10,7 +10,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 router = APIRouter()
 
 @router.get("/{channel_id}")
-async def channels(channel_id: str):
+async def channels(request: Request, channel_id: str):
     try:
         logger.info(f"Fetching info for channel_id: {channel_id}")
         channel_info = await get_channel_info(channel_id)
@@ -24,7 +24,7 @@ async def channels(channel_id: str):
         raise HTTPException(status_code=500, detail=f"Failed to fetch channel info: {str(e)}")
 
 @router.get("/{channel_id}/videos")
-async def channel_videos(channel_id: str, limit: int = 100):
+async def channel_videos(request: Request, channel_id: str, limit: int = 100):
     try:
         logger.info(f"Fetching videos for channel_id: {channel_id} with limit: {limit}")
         videos = await get_channel_videos(channel_id, limit)

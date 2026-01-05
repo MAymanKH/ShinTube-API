@@ -4,3 +4,4 @@ yt-dlp
 pydantic-settings
 loguru
 cachetools
+slowapi
