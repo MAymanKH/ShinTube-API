@@ -1,7 +1,7 @@
+yt-dlp
 fastapi
 uvicorn
-yt-dlp
 pydantic-settings
-loguru
 cachetools
 slowapi
+loguru
