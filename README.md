@@ -165,7 +165,9 @@ The application can be configured using environment variables. You can create a 
 | `DEBUG`           | `True`        | Toggles debug mode.                       |
 | `CACHE_EXPIRY_SECONDS` | `3600`   | Cache TTL in seconds.                     |
 | `RATE_LIMIT_ENABLED` | `True`     | Enable or disable rate limiting.          |
-| `DEFAULT_RATE_LIMIT` | `"100/minute"` | Global rate limit per IP.             |
+| `RATE_LIMIT_PER_SECOND` | `"5/second"` | Rate limit per second per IP.          |
+| `RATE_LIMIT_PER_MINUTE` | `"100/minute"` | Rate limit per minute per IP.          |
+| `RATE_LIMIT_PER_HOUR` | `"1000/hour"` | Rate limit per hour per IP.             |
 | `ALLOWED_ORIGINS` | `["*"]`       | A list of allowed CORS origins.           |
 
 **Example `.env` file:**
@@ -176,7 +178,9 @@ PORT=8000
 DEBUG=False
 CACHE_EXPIRY_SECONDS=1800
 RATE_LIMIT_ENABLED=True
-DEFAULT_RATE_LIMIT="50/minute"
+RATE_LIMIT_PER_SECOND="2/second"
+RATE_LIMIT_PER_MINUTE="60/minute"
+RATE_LIMIT_PER_HOUR="500/hour"
 ALLOWED_ORIGINS='["http://localhost:8000", "https://my-frontend.com"]'
 ```
 
