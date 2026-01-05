@@ -10,7 +10,9 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     CACHE_EXPIRY_SECONDS: int = 3600
     RATE_LIMIT_ENABLED: bool = True
-    DEFAULT_RATE_LIMIT: str = "100/minute"
+    RATE_LIMIT_PER_SECOND: str = "5/second"
+    RATE_LIMIT_PER_MINUTE: str = "100/minute"
+    RATE_LIMIT_PER_HOUR: str = "1000/hour"
     ALLOWED_ORIGINS: List[str] = ["*"]
 
     class Config:
