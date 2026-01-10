@@ -1,24 +1,27 @@
-# 📺 ShinTube API
+<div align="center">
+<img src = "https://mohamedayman.net/assets/icons/st_icon_big.png" width = 200>
+
+# ShinTube API
 
 A **FastAPI backend** that uses [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) to provide a RESTful API for downloading and fetching public data from YouTube.
 
----
+</div>
 
 ## ✨ Features
 
--   **Search YouTube videos and playlists** with optional limits and pagination (`/search`).
--   **Get comprehensive video details** including metrics, thumbnails, etc (`/videos/{id}`).
--   **Get video formats and download videos** (`/videos/{id}/formats`, `/videos/{id}/download`).
--   **Fetch video comments** (`/videos/{id}/comments`).
--   **Retrieve available video subtitles** (`/videos/{id}/subtitles`).
--   **Fetch playlist metadata** and all its videos (`/playlists/{id}`).
--   **Get comprehensive channel details** (`/channels/{id}`).
--   **Fetch a channel's videos** with an optional limit (`/channels/{id}/videos`).
+-   **Search YouTube videos and playlists** with optional limits and pagination.
+-   **Get comprehensive video details** including metrics, thumbnails, etc.
+-   **Get video formats and download videos** directly as a stream.
+-   **Fetch video comments** with replies and commenters metadata.
+-   **Retrieve available video subtitles** in any format or language.
+-   **Fetch playlist metadata** and all its videos.
+-   **Get comprehensive channel details**.
+-   **Fetch a channel's videos** with an optional limit.
 -   **In-memory Caching** for improved performance on repeated requests.
 -   **Rate Limiting** to prevent abuse and ensure stability.
 -   **Built with FastAPI** for high performance.
 -   **Asynchronous support** for non-blocking requests.
--   **CORS enabled** for easy frontend integration.
+-   **Easily configurable** via environment variables.
 -   **Clean, modular, and scalable** project structure.
 -   **Containerized** with Docker for easy setup and deployment.
 
