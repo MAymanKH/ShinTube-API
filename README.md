@@ -7,6 +7,21 @@ A **FastAPI backend** that uses [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) to 
 
 </div>
 
+## 📖 Table of Contents
+
+- [Features](#features)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+  - [1. Using Docker (Recommended)](#1-using-docker-recommended)
+  - [2. Local Python Environment](#2-local-python-environment)
+- [API Endpoints](#api-endpoints)
+  - [Example Requests](#example-requests)
+- [Environment Variables](#environment-variables)
+- [Notes](#notes)
+- [Contributing](#contributing)
+
+---
+
 ## ✨ Features
 
 -   **Search YouTube videos and playlists** with optional limits and pagination.
