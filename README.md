@@ -398,7 +398,8 @@ Response:
         "time_text": "4 years ago",
         "reply_count": 0,
         "replies": []
-      }
+      },
+      ...
     ]
   }
 }
@@ -435,7 +436,8 @@ Response:
           "url": "https://www.youtube.com/api/timedtext?v=tLKKmouUams..."
         }
       ]
-    }
+    },
+    ...
   ]
 }
 ```
@@ -473,7 +475,8 @@ Response:
       "vcodec": "avc1.640028",
       "acodec": "mp4a.40.2",
       "tbr": 1374.122
-    }
+    },
+    ...
   ]
 }
 ```
@@ -528,7 +531,8 @@ Response:
           "resolution": "320x180"
         }
       ]
-    }
+    },
+    ...
   ],
   "webpage_url": "https://www.youtube.com/playlist?list=PLsyeobzWxl7qF4ASwCZZDXor_Y0YJ3Qfc"
 }
@@ -562,7 +566,8 @@ Response:
       "preference": -10,
       "id": "0",
       "resolution": "1060x175"
-    }
+    },
+    ...
   ],
   "avatars": [
     {
@@ -571,7 +576,8 @@ Response:
       "width": 900,
       "id": "7",
       "resolution": "900x900"
-    }
+    },
+    ...
   ]
 }
 ```
@@ -608,7 +614,8 @@ Response:
           "resolution": "320x180"
         }
       ]
-    }
+    },
+    ...
   ]
 }
 ```
